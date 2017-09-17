@@ -14,6 +14,6 @@ if __name__ == "__main__":
         url="https://github.com/numberoverzero/rapid",
         license="MIT",
         include_package_data=True,
-        packages=find_packages(),
+        packages=find_packages(exclude=("examples",)),
         install_requires=requirements,
     )
