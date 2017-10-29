@@ -10,11 +10,14 @@ class Window(pyglet.window.Window):
 
     def __init__(self, *args, **kwargs):
         scenes = kwargs.pop("scenes", [])
+        loop = kwargs.pop("loop", None)
         super().__init__(*args, **kwargs)
 
         self.scenes = scenes
 
-        self.loop = uvloop.new_event_loop()
+        if loop is None:
+            loop = uvloop.new_event_loop()
+        self.loop = loop
         self.clock = pyglet.clock.Clock()
 
         # TODO fix with scene registration: (push_scene, pop_scene)
