@@ -1,4 +1,5 @@
-from rapid.networking import Client, MessageSerializer
+from typing import Union
+from rapid.networking import Client, MessageProtocol, MessageSerializer
 import json
 
 cls_from_type = {}
@@ -15,7 +16,7 @@ class AbstractGameMessage:
     def pack(self) -> bytes:
         raise NotImplementedError
 
-    def send(self, protocol: Client) -> None:
+    def send(self, protocol: Union[Client, MessageProtocol]) -> None:
         message_type = type_from_cls[self.__class__]
         message_data = self.pack()
         protocol.send(message_type, message_data)
@@ -46,14 +47,6 @@ class PlayerMoveAction(AbstractGameMessage):
             self.dx.to_bytes(2, "big", signed=True),
             self.dy.to_bytes(2, "big", signed=True)
         ))
-
-
-class GameSummary(AbstractGameMessage):
-    def unpack(self, data: bytes) -> None:
-        pass
-
-    def pack(self) -> bytes:
-        pass
 
 
 class GameUpdate(AbstractGameMessage):
