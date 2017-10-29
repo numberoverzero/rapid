@@ -1,6 +1,6 @@
 import json
 import pyglet
-from rapid import Camera, Scene, Window
+from rapid import Camera, Scene, Window, key
 from rapid.networking import Client, MessageProtocol
 from examples.simple_networking.messages import GameUpdate, PlayerMoveAction, serializer, unpack
 
@@ -19,21 +19,19 @@ class GameClient(Client):
         if isinstance(message, GameUpdate):
             print(f"{message.type}\n{json.dumps(message.data, sort_keys=True, indent=2)}\n")
             if message.type == "player.joined":
-                player_id = message.data["player.id"]
-                player_pos = message.data["player.pos"]
-                self.scene.on_player_joined(player_id, player_pos)
+                self.scene.on_player_joined(
+                    message.data["player.id"],
+                    message.data["player.pos"])
             elif message.type == "player.left":
-                player_id = message.data["player.id"]
-                self.scene.on_player_left(player_id)
+                self.scene.on_player_left(message.data["player.id"])
             elif message.type == "set.player.id":
-                player_id = message.data["player.id"]
-                self.scene.set_player_id(player_id)
-            elif message.type == "player.moved":
-                player_id = message.data["player.id"]
-                dx, dy = message.data["player.offset"]
-                self.scene.on_player_moved(player_id, dx, dy)
+                self.scene.set_player_id(message.data["player.id"])
             else:
                 print(f"Unknown game update type {message.type}")
+        elif isinstance(message, PlayerMoveAction):
+            self.scene.on_player_moved(message.player_id, message.dx, message.dy)
+        else:
+            print(f"Unknown message type {type(message)}")
 
     def on_connection_lost(self, protocol: MessageProtocol) -> None:
         print("connection closed.")
@@ -42,16 +40,21 @@ class GameClient(Client):
 
 class BubbleScene(Scene):
     def __init__(self, *args, **kwargs) -> None:
+        loop = kwargs.pop("loop", None)
         super().__init__(*args, **kwargs)
         self.movement = {
-            pyglet.window.key.W: 0,
-            pyglet.window.key.A: 0,
-            pyglet.window.key.S: 0,
-            pyglet.window.key.D: 0
+            key.W: 0,
+            key.A: 0,
+            key.S: 0,
+            key.D: 0
         }
         self.id = None
         self.players = {}
-        self.client = None
+        self.client = GameClient(loop=loop, serializer=serializer)
+        self.client.scene = self
+
+    def connect(self, host, port):
+        self.client.loop.create_task(self.client.connect(host=host, port=port))
 
     def on_key_release(self, symbol, modifiers):
         if symbol in self.movement:
@@ -67,8 +70,8 @@ class BubbleScene(Scene):
 
     def on_update(self, dt: float) -> None:
         speed = 1
-        dy = speed * (self.movement[pyglet.window.key.W] - self.movement[pyglet.window.key.S])
-        dx = speed * (self.movement[pyglet.window.key.D] - self.movement[pyglet.window.key.A])
+        dy = speed * (self.movement[key.W] - self.movement[key.S])
+        dx = speed * (self.movement[key.D] - self.movement[key.A])
 
         if dx or dy:
             message = PlayerMoveAction(self.id, dx, dy)
@@ -122,10 +125,8 @@ def main(host: str="0.0.0.0"):
     width, height = 1024, 768
     camera = Camera()
 
-    scene = BubbleScene(camera, "network-bubble-scene")
-    client = GameClient(loop=loop, serializer=serializer)
-    client.scene, scene.client = scene, client
-    loop.create_task(client.connect(host=host, port=8888))
+    scene = BubbleScene(camera, "network-bubble-scene", loop=loop)
+    scene.connect(host, 8888)
 
     window = Window(width=width, height=height, scenes=[scene], loop=loop)
     window.run()
