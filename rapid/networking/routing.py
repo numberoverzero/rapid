@@ -4,6 +4,12 @@ from .clients import Client
 from .messages import MessageProtocol
 from ..util import get_annotations, has_annotations
 
+__all__ = [
+    "RoutingClient",
+    "get_routing_annotations_for",
+    "handle",
+]
+
 ROUTING_ANNOTATIONS = "rapid.networking.routing"
 MessageHandler = Callable[[Any], Any]
 
