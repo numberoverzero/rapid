@@ -175,7 +175,7 @@ class Scene:
 
     def on_key_press(self, symbol, modifiers):
         if symbol == pyglet.window.key.ESCAPE:
-            self.window.on_scene_close(self)
+            self.window.remove_scene(self)
 
     def on_key_release(self, symbol, modifiers):
         pass

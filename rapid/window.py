@@ -13,9 +13,9 @@ class Window(pyglet.window.Window):
         loop = kwargs.pop("loop", None)
         super().__init__(*args, **kwargs)
 
-        self.scenes = scenes
+        self.scenes = []
         for scene in scenes:
-            scene.window = self
+            self.add_scene(scene)
 
         if loop is None:
             loop = uvloop.new_event_loop()
@@ -26,10 +26,20 @@ class Window(pyglet.window.Window):
     def scene(self) -> Scene:
         return self.scenes[-1]
 
-    def on_scene_close(self, scene: Scene):
-        assert scene is self.scene  # TODO handle non-active scene closing
-        self.scenes.pop(-1)
+    def add_scene(self, scene: Scene):
+        # TODO handle non-active scene additions
+        assert not scene.window
+        scene.window = self
+        self.scenes.append(scene)
+
+    def remove_scene(self, scene: Scene):
+        # TODO handle non-active scene removals
+        assert scene is self.scene
+        assert scene.window is self
         scene.on_close()
+        scene.window = None
+        self.scenes.pop(-1)
+
         if not self.scenes:
             self.on_close()
 
@@ -59,7 +69,7 @@ class Window(pyglet.window.Window):
         if not self.scenes:
             super().on_close()
         while self.scenes:
-            self.on_scene_close(self.scene)
+            self.remove_scene(self.scene)
 
     def on_draw(self):
         """The window contents must be redrawn."""
