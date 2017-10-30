@@ -1,3 +1,4 @@
+ANNOTATIONS_NAME = "_rapid_annotations"
 _symbols = {}
 
 
@@ -8,7 +9,7 @@ class Sentinel:
 
     .. code-block:: pycon
 
-        >>> from engine.util import Sentinel
+        >>> from rapid.util import Sentinel
         >>> empty = Sentinel("empty")
         >>> empty
         <Sentinel[empty]>
@@ -37,7 +38,7 @@ class Sentinel:
 
     .. code-block:: pycon
 
-        >>> from engine.util import Sentinel
+        >>> from rapid.util import Sentinel
         >>> missing = Sentinel("Missing")
         >>> def some_func(optional=missing):
         ...     pass
@@ -61,3 +62,27 @@ class Sentinel:
 
     def __repr__(self):
         return "<Sentinel[{}]>".format(self.name)
+
+
+def has_annotations(obj) -> bool:
+    return hasattr(obj, ANNOTATIONS_NAME)
+
+
+def get_annotations(obj) -> dict:
+    """
+    .. code-block:: pycon
+
+        >>> import random
+        >>> def singleton(func):
+        ...     get_annotations(func)["singleton"] = True
+        ...     return func
+        ...
+        >>> @singleton
+        >>> def rng():
+        ...     return random.Random()
+        ...
+        >>> assert get_annotations(rng)["singleton"]
+    """
+    if not has_annotations(obj):
+        setattr(obj, ANNOTATIONS_NAME, {})
+    return getattr(obj, ANNOTATIONS_NAME)

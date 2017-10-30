@@ -40,12 +40,12 @@ class Window(pyglet.window.Window):
                     self.clock.tick()
                     self.on_draw()
                     self.dispatch_events()
-                    await asyncio.sleep(interval / 2, loop=self.loop)
+                    await asyncio.sleep(interval, loop=self.loop)
                 self.loop.stop()
             finally:
                 self.clock.unschedule(self.on_update)
 
-        self.loop.create_task(pyglet_update(1 / 60))
+        self.loop.create_task(pyglet_update(1 / 120))
         self.loop.run_forever()
 
     # INHERITED FROM pyglet.window.Window ============================================================================
