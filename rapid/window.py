@@ -14,20 +14,24 @@ class Window(pyglet.window.Window):
         super().__init__(*args, **kwargs)
 
         self.scenes = scenes
+        for scene in scenes:
+            scene.window = self
 
         if loop is None:
             loop = uvloop.new_event_loop()
         self.loop = loop
         self.clock = pyglet.clock.Clock()
 
-        # TODO fix with scene registration: (push_scene, pop_scene)
-        # this is just hacking on an exit handler badly.
-        if scenes:
-            scenes[-1].on_close = lambda s: self.on_close()
-
     @property
     def scene(self) -> Scene:
         return self.scenes[-1]
+
+    def on_scene_close(self, scene: Scene):
+        assert scene is self.scene  # TODO handle non-active scene closing
+        self.scenes.pop(-1)
+        scene.on_close()
+        if not self.scenes:
+            self.on_close()
 
     def on_update(self, dt: float) -> None:
         self.scene.on_update(dt)
@@ -50,6 +54,12 @@ class Window(pyglet.window.Window):
 
     # INHERITED FROM pyglet.window.Window ============================================================================
     # Forward to the current scene
+
+    def on_close(self):
+        if not self.scenes:
+            super().on_close()
+        while self.scenes:
+            self.on_scene_close(self.scene)
 
     def on_draw(self):
         """The window contents must be redrawn."""

@@ -151,15 +151,18 @@ class Scene:
     camera: Camera
     components: List[Drawable]
     name: str
-    on_close: Optional[SceneCloseHandler]
+    window: Optional["window.Window"]
 
     def __init__(self,
                  camera: Camera, name: str="unnamed-scene",
-                 on_close: Optional[SceneCloseHandler]=None) -> None:
+                 window: Optional["window.Window"]=None) -> None:
         self.components = []  # type: List[Drawable]
         self.camera = camera
         self.name = name
-        self.on_close = on_close
+        self.window = window
+
+    def on_close(self):
+        pass
 
     def on_update(self, dt: float) -> None:
         self.camera.on_update(dt)
@@ -172,7 +175,7 @@ class Scene:
 
     def on_key_press(self, symbol, modifiers):
         if symbol == pyglet.window.key.ESCAPE:
-            self.on_close and self.on_close(self)
+            self.window.on_scene_close(self)
 
     def on_key_release(self, symbol, modifiers):
         pass
