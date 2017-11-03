@@ -14,7 +14,7 @@ class Client(MessageHandler):
 
     @property
     def connected(self) -> bool:
-        return self.protocol is not None and self.protocol.connected
+        return self.protocol is not None and self.protocol.transport is not None
 
     async def connect(self, **kwargs):
         _, self.protocol = await self.loop.create_connection(self.protocol_factory, **kwargs)

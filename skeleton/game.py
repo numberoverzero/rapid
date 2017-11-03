@@ -3,7 +3,7 @@ from skeleton.networking import attach_routing_client
 
 
 class Game(Scene):
-    def __init__(self, title="My Game", screen_width=1024, screen_height=768):
+    def __init__(self, title="<GAME TITLE HERE>", screen_width=1024, screen_height=768):
         camera = Camera()
         super().__init__(camera, name=title)
         window = Window(width=screen_width, height=screen_height)

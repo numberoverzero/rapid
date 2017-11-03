@@ -9,7 +9,6 @@ from skeleton.networking import AbstractMessage, Server
 
 __all__ = [
     "AbstractMessage", "Game", "Server",
-    "rectangle",
 
     # re-imports
     "handle", "key",

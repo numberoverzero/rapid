@@ -2,7 +2,7 @@ from skeleton import AbstractMessage
 HOST, PORT = "localhost", 8080
 
 
-class MyMessage(AbstractMessage):
+class ClockMessage(AbstractMessage):
     message_type = 0
 
     @classmethod
@@ -19,15 +19,17 @@ def run_server():
     from skeleton import Server
 
     class EchoServer(Server):
-        def on_connection_made(self, protocol): print(f"+++ {protocol}")
+        def on_connection_made(self, protocol):
+            print(f"+++ {protocol}")
 
-        def on_connection_lost(self, protocol): print(f"--- {protocol}")
+        def on_connection_lost(self, protocol):
+            print(f"--- {protocol}")
 
         def on_recv_message(self, protocol, type, data):
-            assert type == MyMessage.message_type
-            received = MyMessage.unpack(data)
+            assert type == ClockMessage.message_type
+            received = ClockMessage.unpack(data)
             print(json.dumps(received, sort_keys=True))
-            MyMessage.send(protocol, received)
+            ClockMessage.send(protocol, received)
 
     print(f"Serving on {PORT}")
     server = EchoServer()
@@ -39,19 +41,19 @@ def run_client():
     from skeleton import Game, handle, key
 
     class MyGame(Game):
-        @handle(MyMessage)
+        @handle(ClockMessage)
         def on_my_message(self, message: dict):
             print(message["now"])
 
         def on_key_press(self, symbol, modifiers):
             if symbol == key.ENTER:
                 now = datetime.datetime.now().isoformat()
-                MyMessage.send(self.client, {"now": now})
+                ClockMessage.send(self.client, {"now": now})
             else:
                 return super().on_key_press(symbol, modifiers)
 
     print("Starting up client")
-    g = MyGame()
+    g = MyGame(title="Press <Enter> to send a message")
     g.run(HOST, PORT)
 
 
