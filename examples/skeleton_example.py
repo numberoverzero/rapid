@@ -52,7 +52,7 @@ def run_client():
 
     print("Starting up client")
     g = MyGame()
-    g.run()
+    g.run(HOST, PORT)
 
 
 if __name__ == '__main__':
