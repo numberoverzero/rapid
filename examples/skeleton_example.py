@@ -1,8 +1,8 @@
-from skeleton import AbstractMessage
+import skeleton
 HOST, PORT = "localhost", 8080
 
 
-class ClockMessage(AbstractMessage):
+class ClockMessage(skeleton.AbstractMessage):
     message_type = 0
 
     @classmethod
@@ -16,9 +16,8 @@ class ClockMessage(AbstractMessage):
 
 def run_server():
     import json
-    from skeleton import Server
 
-    class EchoServer(Server):
+    class EchoServer(skeleton.Server):
         def on_connection_made(self, protocol):
             print(f"+++ {protocol}")
 
@@ -38,22 +37,21 @@ def run_server():
 
 def run_client():
     import datetime
-    from skeleton import Game, handle, key
 
-    class MyGame(Game):
-        @handle(ClockMessage)
-        def on_my_message(self, message: dict):
+    class Game(skeleton.Game):
+        @skeleton.handle(ClockMessage)
+        def on_clock_message(self, message: dict):
             print(message["now"])
 
         def on_key_press(self, symbol, modifiers):
-            if symbol == key.ENTER:
+            if symbol == skeleton.key.ENTER:
                 now = datetime.datetime.now().isoformat()
                 ClockMessage.send(self.client, {"now": now})
             else:
                 return super().on_key_press(symbol, modifiers)
 
     print("Starting up client")
-    g = MyGame(title="Press <Enter> to send a message")
+    g = Game(title="Press <Enter> to send a message")
     g.run(HOST, PORT)
 
 

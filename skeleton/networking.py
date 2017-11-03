@@ -8,17 +8,17 @@ from rapid import networking
 from rapid.networking import Client, MessageProtocol, MessageSerializer
 from rapid.networking.routing import RoutingClient
 
-
-cls_from_type = {}
-serializer = MessageSerializer(
+CLS_BY_TYPE = {}
+SERIALIZER = MessageSerializer(
     type_size_bytes=1,
     data_size_bytes=2,
     byteorder="big"
 )
+MAX_MESSAGE_TYPES = 8 ** SERIALIZER.type_size_bytes
 
 
 def unpack(type: int, data: bytes):
-    message_cls = cls_from_type[type]
+    message_cls = CLS_BY_TYPE[type]
     return message_cls, message_cls.unpack(data)
 
 
@@ -26,8 +26,13 @@ class AbstractMessage:
     message_type: int
 
     def __init_subclass__(cls, **kwargs):
-        assert cls.message_type not in cls_from_type
-        cls_from_type[cls.message_type] = cls
+        type = cls.message_type
+        assert isinstance(type, int), f"{cls}.message_type must be an int between [0, {MAX_MESSAGE_TYPES})"
+        assert type not in CLS_BY_TYPE, f"messages have same type: {CLS_BY_TYPE[type]}, {cls}"
+        assert 0 <= type < MAX_MESSAGE_TYPES, (
+            f"skeleton.networking.serializer supports at most "
+            f"{MAX_MESSAGE_TYPES} different message types")
+        CLS_BY_TYPE[type] = cls
 
     @classmethod
     def pack(cls, message: dict) -> bytes:
@@ -47,7 +52,7 @@ class Server(networking.Server):
     def __init__(self, loop: Optional[asyncio.AbstractEventLoop]=None) -> None:
         if loop is None:
             loop = uvloop.new_event_loop()
-        super().__init__(loop, serializer)
+        super().__init__(loop, SERIALIZER)
 
     def run(self, host, port):
         self.loop.run_until_complete(self.start(host=host, port=port))
@@ -55,6 +60,6 @@ class Server(networking.Server):
 
 
 def attach_routing_client(scene) -> RoutingClient:
-    client = RoutingClient(scene, unpack, loop=scene.window.loop, serializer=serializer)
+    client = RoutingClient(scene, unpack, loop=scene.window.loop, serializer=SERIALIZER)
     scene.client = client
     return client
