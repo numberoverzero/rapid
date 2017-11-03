@@ -12,5 +12,5 @@ class Game(Scene):
 
     def run(self, host=None, port=None):
         if host and port:
-            self.client.loop.create_task(self.client.connect(host=host, port=port))
+            self.client.loop.run_until_complete(self.client.connect(host=host, port=port))
         self.window.run()

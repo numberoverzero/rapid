@@ -58,9 +58,6 @@ def run_client():
 
 
 if __name__ == '__main__':
-    import sys
-    {
-        (): run_server,
-        ("client",): run_client,
-        ("server",): run_server
-    }[tuple(sys.argv[1:])]()
+    import sys; args = sys.argv[1:]
+    mode = args[0] if args else "server"
+    locals()["run_" + mode]()

@@ -50,7 +50,7 @@ class Server(networking.Server):
         super().__init__(loop, serializer)
 
     def run(self, host, port):
-        self.loop.create_task(self.start(host=host, port=port))
+        self.loop.run_until_complete(self.start(host=host, port=port))
         self.loop.run_forever()
 
 
