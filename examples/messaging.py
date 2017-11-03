@@ -105,7 +105,7 @@ def run_server():
             print(f"Serving on {self._server.sockets[0].getsockname()}")
 
     server = GameServer(loop=loop, serializer=serializer)
-    loop.create_task(server.serve(host="127.0.0.1", port=8888))
+    loop.create_task(server.start(host="127.0.0.1", port=8888))
     try:
         loop.run_forever()
     except KeyboardInterrupt:

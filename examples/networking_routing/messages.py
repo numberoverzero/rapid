@@ -23,11 +23,11 @@ class AbstractMessage:
         cls_from_type[cls.message_type] = cls
 
     @classmethod
-    def pack(cls, message):
+    def pack(cls, message: dict) -> bytes:
         raise NotImplementedError
 
     @classmethod
-    def unpack(cls, message_data: bytes):
+    def unpack(cls, message_data: bytes) -> dict:
         raise NotImplementedError
 
     @classmethod

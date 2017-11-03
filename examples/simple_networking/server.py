@@ -68,7 +68,7 @@ def main(host: str="0.0.0.0"):
     loop = uvloop.new_event_loop()
 
     server = GameServer(loop=loop, serializer=serializer)
-    loop.create_task(server.serve(host=host, port=8888))
+    loop.create_task(server.start(host=host, port=8888))
 
     try:
         loop.run_forever()
