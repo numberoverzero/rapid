@@ -1,20 +1,18 @@
 import asyncio
 import uvloop
 import pyglet
-from typing import List
+from typing import List, Optional
 from .scene import Scene
 
 
 class Window(pyglet.window.Window):
     scenes: List[Scene]
 
-    def __init__(self, *args, **kwargs):
-        scenes = kwargs.pop("scenes", [])
-        loop = kwargs.pop("loop", None)
+    def __init__(self, *args, scenes=None, loop=None, **kwargs):
         super().__init__(*args, **kwargs)
 
         self.scenes = []
-        for scene in scenes:
+        for scene in (scenes or []):
             self.add_scene(scene)
 
         if loop is None:
@@ -29,17 +27,26 @@ class Window(pyglet.window.Window):
     def add_scene(self, scene: Scene):
         # TODO handle non-active scene additions
         assert not scene.window
+
         scene.window = self
         self.scenes.append(scene)
+
+        self.on_scene_change()
 
     def remove_scene(self, scene: Scene):
         # TODO handle non-active scene removals
         assert scene is self.scene
         assert scene.window is self
+
         scene.on_close()
         scene.window = None
         self.scenes.pop(-1)
 
+        self.on_scene_change()
+
+    def on_scene_change(self):
+        if self.scenes:
+            self.set_caption(self.scene.name)
         if not self.scenes:
             self.on_close()
 
@@ -48,7 +55,7 @@ class Window(pyglet.window.Window):
 
     def run(self) -> None:
         async def pyglet_update(interval: float):
-            self.clock.schedule_interval(self.on_update, interval)
+            self.clock.schedule_interval(self.on_update, interval * 2)
             try:
                 while not self.has_exit:
                     self.clock.tick()

@@ -25,7 +25,7 @@ class Client(MessageHandler):
         self.protocol = None
 
     def send(self, type: int, data: bytes) -> None:
-        assert self.protocol is not None
+        assert self.connected
         self.protocol.send(type, data)
 
     def on_connection_lost(self, protocol: MessageProtocol) -> None:
@@ -50,7 +50,7 @@ class Server(MessageHandler):
         self.loop = loop
         self._running = False
 
-    async def serve(self, **kwargs):
+    async def start(self, **kwargs):
         if not self._running:
             self._server = await self.loop.create_server(self.protocol_factory, **kwargs)
             self.on_start()
@@ -64,13 +64,13 @@ class Server(MessageHandler):
         self._running = False
 
     def on_connection_lost(self, protocol: MessageProtocol) -> None:
-        raise NotImplementedError
+        pass
 
     def on_recv_message(self, protocol: MessageProtocol, type: int, data: bytes) -> None:
-        raise NotImplementedError
+        pass
 
     def on_connection_made(self, protocol: MessageProtocol) -> None:
-        raise NotImplementedError
+        pass
 
     def on_start(self) -> None:
         pass

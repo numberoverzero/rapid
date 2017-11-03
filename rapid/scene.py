@@ -151,12 +151,12 @@ class Scene:
     camera: Camera
     components: List[Drawable]
     name: str
-    window: Optional["window.Window"]
+    window: "window.Window"
 
     def __init__(self,
                  camera: Camera, name: str="unnamed-scene",
                  window: Optional["window.Window"]=None) -> None:
-        self.components = []  # type: List[Drawable]
+        self.components = []
         self.camera = camera
         self.name = name
         self.window = window
