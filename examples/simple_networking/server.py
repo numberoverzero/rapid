@@ -1,4 +1,4 @@
-from rapid.networking import Server, MessageProtocol
+from rapid.networking.tcp import Server, MessageProtocol
 from examples.simple_networking.messages import GameUpdate, PlayerMoveAction, serializer, unpack
 
 

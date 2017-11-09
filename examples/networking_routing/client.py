@@ -1,6 +1,7 @@
 import pyglet
 from rapid import Scene, Camera, Window, key
-from rapid.networking import routing
+from rapid.networking import handle
+from rapid.networking.tcp import RoutingClient
 from examples.networking_routing.messages import GameUpdate, PlayerMoveAction, serializer, unpack
 
 
@@ -16,7 +17,7 @@ class MyScene(Scene):
         }
         self.id = None
         self.players = {}
-        self.client = routing.RoutingClient(self, unpack, loop=loop, serializer=serializer)
+        self.client = RoutingClient(self, unpack, loop=loop, serializer=serializer)
 
     def on_key_release(self, symbol, modifiers):
         if symbol in self.movement:
@@ -60,7 +61,7 @@ class MyScene(Scene):
     def connect(self, host, port):
         self.client.loop.create_task(self.client.connect(host=host, port=port))
 
-    @routing.handle(GameUpdate)
+    @handle(GameUpdate)
     def _game_update(self, update: dict):
         data = update["data"]
         if update["type"] == "player.joined":
@@ -81,7 +82,7 @@ class MyScene(Scene):
     def set_player_id(self, player_id: int):
         self.id = player_id
 
-    @routing.handle(PlayerMoveAction)
+    @handle(PlayerMoveAction)
     def on_player_moved(self, action: dict):
         player_id = action["player_id"]
         player_x, player_y = self.players[player_id]

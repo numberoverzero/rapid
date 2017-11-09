@@ -1,7 +1,7 @@
 import json
 import pyglet
 from rapid import Camera, Scene, Window, key
-from rapid.networking import Client, MessageProtocol
+from rapid.networking.tcp import Client, MessageProtocol
 from examples.simple_networking.messages import GameUpdate, PlayerMoveAction, serializer, unpack
 
 

@@ -1,5 +1,5 @@
 from typing import Union
-from rapid.networking import Client, MessageProtocol, MessageSerializer
+from rapid.networking.tcp import Client, MessageProtocol, MessageSerializer
 import json
 
 cls_from_type = {}

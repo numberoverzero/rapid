@@ -1,21 +1,6 @@
-from typing import Tuple, Optional, Dict
+from ..shared import build_slices
+from typing import Tuple, Optional
 import asyncio
-
-
-def _build_slices(segments: Tuple[Tuple[str, int], ...]) -> Dict[str, slice]:
-    end = 0
-    slices = {}
-    for i, (label, length) in enumerate(segments):
-        if i == 0:
-            start = 0
-            end = length
-        else:
-            start = end  # previous segment's end point
-            end += length
-        slices[label] = slice(start, end)
-    assert "_total" not in slices
-    slices["_total"] = slice(0, end)
-    return slices
 
 
 class MessageSerializer:
@@ -29,7 +14,7 @@ class MessageSerializer:
         self.byteorder = byteorder
         self.type_size_bytes = type_size_bytes
         self.data_size_bytes = data_size_bytes
-        self.fixed_slices = _build_slices((
+        self.fixed_slices = build_slices((
             ("msg_type", type_size_bytes),
             ("msg_length", data_size_bytes)
         ))

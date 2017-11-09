@@ -1,5 +1,7 @@
-from typing import Optional
 import asyncio
+from typing import Optional, Callable, Any, Tuple, Dict, Type
+
+from ..shared import get_routing_annotations_for
 from .messages import MessageHandler, MessageProtocol, MessageSerializer
 
 
@@ -36,6 +38,35 @@ class Client(MessageHandler):
 
     def on_connection_made(self, protocol: MessageProtocol) -> None:
         raise NotImplementedError
+
+
+class RoutingClient(Client):
+    def __init__(self, scene, unpack: Callable[[int, bytes], Tuple[Any, Any]], *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+        self.scene = scene
+        self._routes = self._build_routes(scene)
+        self._unpack = unpack
+
+    # noinspection PyMethodMayBeStatic
+    def _build_routes(self, scene) -> Dict[Type[Any], Callable[[Any], Any]]:
+        routes = {}
+        assert not isinstance(scene, type)  # must be an instance of the annotated class, not the class itself
+        for func, message_cls, *_ in get_routing_annotations_for(scene):
+            assert message_cls not in routes
+            routes[message_cls] = func
+        return routes
+
+    def on_connection_made(self, protocol: MessageProtocol) -> None:
+        pass
+
+    def on_recv_message(self, protocol: MessageProtocol, type: int, data: bytes) -> None:
+        message_cls, message = self._unpack(type, data)
+        handler = self._routes.get(message_cls, None)
+        if handler:
+            handler(message)
+
+    def on_connection_lost(self, protocol: MessageProtocol) -> None:
+        pass
 
 
 class Server(MessageHandler):

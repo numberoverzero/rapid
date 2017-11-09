@@ -1,7 +1,7 @@
 import asyncio
 import datetime
 import uvloop
-from rapid.networking import Client, Server, MessageProtocol, MessageSerializer
+from rapid.networking.tcp import Client, Server, MessageProtocol, MessageSerializer
 
 import json
 import sys

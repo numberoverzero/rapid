@@ -4,12 +4,12 @@ Simplified networking model requires messages to subclass AbstractMessage
 import asyncio
 import uvloop
 from typing import Optional, Union
-from rapid import networking
-from rapid.networking import Client, MessageProtocol, MessageSerializer
-from rapid.networking.routing import RoutingClient
+
+from rapid.networking import tcp
+
 
 CLS_BY_TYPE = {}
-SERIALIZER = MessageSerializer(
+SERIALIZER = tcp.MessageSerializer(
     type_size_bytes=1,
     data_size_bytes=2,
     byteorder="big"
@@ -43,12 +43,12 @@ class AbstractMessage:
         raise NotImplementedError
 
     @classmethod
-    def send(cls, protocol: Union[Client, MessageProtocol], message: dict):
+    def send(cls, protocol: Union[tcp.Client, tcp.MessageProtocol], message: dict):
         data = cls.pack(message)
         protocol.send(cls.message_type, data)
 
 
-class Server(networking.Server):
+class Server(tcp.clients.Server):
     def __init__(self, loop: Optional[asyncio.AbstractEventLoop]=None) -> None:
         if loop is None:
             loop = uvloop.new_event_loop()
@@ -59,7 +59,7 @@ class Server(networking.Server):
         self.loop.run_forever()
 
 
-def attach_routing_client(scene) -> RoutingClient:
-    client = RoutingClient(scene, unpack, loop=scene.window.loop, serializer=SERIALIZER)
+def attach_routing_client(scene) -> tcp.RoutingClient:
+    client = tcp.RoutingClient(scene, unpack, loop=scene.window.loop, serializer=SERIALIZER)
     scene.client = client
     return client
