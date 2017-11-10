@@ -82,7 +82,7 @@ class TCPMessageProtocol(MessageProtocol[asyncio.Transport]):
         self.handler.on_connection_lost(self)
 
 
-class Client(MessageHandler):
+class TCPClient(MessageHandler):
     loop: asyncio.AbstractEventLoop
     protocol: Optional[MessageProtocol]
 
@@ -119,7 +119,7 @@ class Client(MessageHandler):
         raise NotImplementedError
 
 
-class RoutingClient(Client):
+class RoutingClient(TCPClient):
     def __init__(self, scene, unpack: Callable[[int, bytes], Tuple[Any, Any]], *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         self.scene = scene

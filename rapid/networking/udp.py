@@ -59,7 +59,7 @@ class UDPMessageProtocol(MessageProtocol[asyncio.DatagramProtocol]):
         self.handler.on_connection_lost(self)
 
 
-class Client(MessageHandler):
+class UDPClient(MessageHandler):
     loop: asyncio.AbstractEventLoop
     protocol: Optional[MessageProtocol]
 
@@ -97,7 +97,7 @@ class Client(MessageHandler):
         raise NotImplementedError
 
 
-class RoutingClient(Client):
+class RoutingClient(UDPClient):
     def __init__(self, scene, unpack: Callable[[int, bytes], Tuple[Any, Any]], *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         self.scene = scene

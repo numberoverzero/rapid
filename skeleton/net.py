@@ -1,10 +1,11 @@
 import uvloop
 from typing import Any, Optional, Tuple, Type, Union
 from rapid.window import Scene
-from rapid.networking import AddrInfo, tcp, udp
+from rapid.networking import AddrInfo, handle, tcp, udp
 
 __all__ = [
-    "AbstractMessage", "Client"
+    "AbstractMessage", "Client",
+    "handle"
 ]
 
 CLS_BY_TYPE = {}

@@ -1,7 +1,8 @@
-from . import tcp, udp
 from ._shared import AddrInfo, MessageHandler, MessageProtocol, handle
+from .tcp import TCPClient
+from .udp import UDPClient
 
 __all__ = [
-    "tcp", "udp",
     "AddrInfo", "MessageHandler", "MessageProtocol", "handle",
+    "TCPClient", "UDPClient",
 ]

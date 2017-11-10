@@ -11,6 +11,11 @@ __all__ = [
 ]
 
 
+def _supported_messages(func):
+    annotations = get_annotations(func).setdefault(ROUTING_ANNOTATIONS, {})
+    return annotations.setdefault("messages", [])
+
+
 def build_slices(segments: Tuple[Tuple[str, int], ...]) -> Dict[str, slice]:
     end = 0
     slices = {}
@@ -25,11 +30,6 @@ def build_slices(segments: Tuple[Tuple[str, int], ...]) -> Dict[str, slice]:
     assert "_total" not in slices
     slices["_total"] = slice(0, end)
     return slices
-
-
-def _supported_messages(func):
-    annotations = get_annotations(func).setdefault(ROUTING_ANNOTATIONS, {})
-    return annotations.setdefault("messages", [])
 
 
 def get_routing_annotations_for(scene):

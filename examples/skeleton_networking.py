@@ -2,11 +2,10 @@ import skeleton
 HOST, PORT = "localhost", 8080
 
 
-class ClockMessage(skeleton.AbstractMessage):
+class ClockMessage(skeleton.net.AbstractMessage):
     message_type = 0
-    now: str
 
-    def __init__(self, now=None):
+    def __init__(self, now: str):
         self.now = now
 
     @classmethod
@@ -18,7 +17,7 @@ class ClockMessage(skeleton.AbstractMessage):
 
 
 def run_server(net_mode):
-    class EchoServer(skeleton.Server):
+    class EchoServer(skeleton.net.Server):
         def on_connection_made(self, protocol):
             print(f"+++ {protocol}")
 
@@ -38,7 +37,7 @@ def run_client(net_mode):
     import datetime
 
     class Game(skeleton.Game):
-        @skeleton.handle(ClockMessage)
+        @skeleton.net.handle(ClockMessage)
         def on_clock_message(self, message: ClockMessage):
             print(message.now)
 
