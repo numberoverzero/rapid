@@ -18,8 +18,8 @@ class Client(MessageHandler):
     def connected(self) -> bool:
         return self.protocol is not None and self.protocol.transport is not None
 
-    async def connect(self, **kwargs):
-        _, self.protocol = await self.loop.create_connection(self.protocol_factory, **kwargs)
+    async def connect(self, *, host, port, **kwargs):
+        _, self.protocol = await self.loop.create_connection(self.protocol_factory, host=host, port=port, **kwargs)
 
     async def disconnect(self):
         if self.protocol is not None:
@@ -81,9 +81,9 @@ class Server(MessageHandler):
         self.loop = loop
         self._running = False
 
-    async def start(self, **kwargs):
+    async def start(self, *, host, port, **kwargs):
         if not self._running:
-            self._server = await self.loop.create_server(self.protocol_factory, **kwargs)
+            self._server = await self.loop.create_server(self.protocol_factory, host=host, port=port, **kwargs)
             self.on_start()
         self._running = True
 
