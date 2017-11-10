@@ -21,7 +21,9 @@ class Window(pyglet.window.Window):
         self.clock = pyglet.clock.Clock()
 
     @property
-    def scene(self) -> Scene:
+    def scene(self) -> Optional[Scene]:
+        if not self.scenes:
+            return None
         return self.scenes[-1]
 
     def add_scene(self, scene: Scene):
@@ -45,9 +47,9 @@ class Window(pyglet.window.Window):
         self.on_scene_change()
 
     def on_scene_change(self):
-        if self.scenes:
+        if self.scene:
             self.set_caption(self.scene.name)
-        if not self.scenes:
+        if not self.scene:
             self.on_close()
 
     def on_update(self, dt: float) -> None:
@@ -73,9 +75,9 @@ class Window(pyglet.window.Window):
     # Forward to the current scene
 
     def on_close(self):
-        if not self.scenes:
+        if not self.scene:
             super().on_close()
-        while self.scenes:
+        while self.scene:
             self.remove_scene(self.scene)
 
     def on_draw(self):
