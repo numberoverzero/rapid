@@ -45,7 +45,7 @@ def handle(message_cls: Type[Any], *args, **kwargs):
     """
     .. code-block:: pycon
 
-        >>> from rapid.networking import tcp, handle
+        >>> from rapid.net import tcp, handle
         >>> from rapid import Scene
         >>> class CustomMessageType:
         ...     def pack(self):
