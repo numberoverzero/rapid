@@ -5,11 +5,10 @@ Single-scene games
 from rapid import key
 from rapid.networking import handle
 from skeleton.game import Game
-from skeleton.networking import AbstractMessage, Server
+from skeleton.net import AbstractMessage, Client, Server
 
 __all__ = [
-    "AbstractMessage", "Game", "Server",
-
-    # re-imports
+    "Game",
+    "AbstractMessage", "Client", "Server",
     "handle", "key",
 ]

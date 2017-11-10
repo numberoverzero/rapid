@@ -4,19 +4,20 @@ HOST, PORT = "localhost", 8080
 
 class ClockMessage(skeleton.AbstractMessage):
     message_type = 0
+    now: str
+
+    def __init__(self, now=None):
+        self.now = now
 
     @classmethod
-    def unpack(cls, message_data: bytes) -> dict:
-        return {"now": message_data.decode()}
+    def unpack(cls, message_data: bytes) -> "ClockMessage":
+        return cls(message_data.decode())
 
-    @classmethod
-    def pack(cls, message: dict) -> bytes:
-        return message["now"].encode()
+    def pack(self) -> bytes:
+        return self.now.encode()
 
 
-def run_server():
-    import json
-
+def run_server(net_mode):
     class EchoServer(skeleton.Server):
         def on_connection_made(self, protocol):
             print(f"+++ {protocol}")
@@ -24,38 +25,37 @@ def run_server():
         def on_connection_lost(self, protocol):
             print(f"--- {protocol}")
 
-        def on_recv_message(self, protocol, type, data):
-            assert type == ClockMessage.message_type
-            received = ClockMessage.unpack(data)
-            print(json.dumps(received, sort_keys=True))
-            ClockMessage.send(protocol, received)
+        def on_recv_message(self, message, protocol, addr=None):
+            print(message.now, protocol, addr)
+            self.send(message, protocol, addr)
 
-    print(f"Serving on {PORT}")
-    server = EchoServer()
-    server.run(HOST, PORT)
+    print(f"Serving on {PORT} over {net_mode.upper()}")
+    server = EchoServer(HOST, PORT, mode=net_mode)
+    server.start()
 
 
-def run_client():
+def run_client(net_mode):
     import datetime
 
     class Game(skeleton.Game):
         @skeleton.handle(ClockMessage)
-        def on_clock_message(self, message: dict):
-            print(message["now"])
+        def on_clock_message(self, message: ClockMessage):
+            print(message.now)
 
         def on_key_press(self, symbol, modifiers):
             if symbol == skeleton.key.ENTER:
-                now = datetime.datetime.now().isoformat()
-                ClockMessage.send(self.client, {"now": now})
+                message = ClockMessage(now=datetime.datetime.now().isoformat())
+                self.client.send(message)
             else:
                 return super().on_key_press(symbol, modifiers)
 
-    print("Starting up client")
-    g = Game(title="Press <Enter> to send a message")
-    g.run(HOST, PORT)
+    print(f"Client talking to {PORT} over {net_mode.upper()}")
+    g = Game(host=HOST, port=PORT, mode=net_mode, title="Press <Enter> to send a message")
+    g.run()
 
 
 if __name__ == '__main__':
     import sys; args = sys.argv[1:]
     mode = args[0] if args else "server"
-    locals()["run_" + mode]()
+    net_mode = args[1] if args else "tcp"
+    locals()["run_" + mode](net_mode)

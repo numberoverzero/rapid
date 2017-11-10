@@ -1,7 +1,7 @@
 from . import tcp, udp
-from .shared import handle
+from ._shared import AddrInfo, MessageHandler, MessageProtocol, handle
 
 __all__ = [
     "tcp", "udp",
-    "handle",
+    "AddrInfo", "MessageHandler", "MessageProtocol", "handle",
 ]
