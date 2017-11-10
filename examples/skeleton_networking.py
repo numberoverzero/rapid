@@ -25,7 +25,7 @@ def run_server(net_mode):
             print(f"--- {protocol}")
 
         def on_recv_message(self, message, protocol, addr=None):
-            print(message.now, protocol, addr)
+            print("SERVER", message.now, protocol, addr)
             self.send(message, protocol, addr)
 
     print(f"Serving on {PORT} over {net_mode.upper()}")
@@ -39,7 +39,7 @@ def run_client(net_mode):
     class Game(skeleton.Game):
         @skeleton.net.handle(ClockMessage)
         def on_clock_message(self, message: ClockMessage):
-            print(message.now)
+            print("CLIENT", message.now)
 
         def on_key_press(self, symbol, modifiers):
             if symbol == skeleton.key.ENTER:
@@ -51,6 +51,16 @@ def run_client(net_mode):
     print(f"Client talking to {PORT} over {net_mode.upper()}")
     g = Game(host=HOST, port=PORT, mode=net_mode, title="Press <Enter> to send a message")
     g.run()
+
+
+def run_both(net_mode):
+    import multiprocessing
+
+    print("Starting server in new process")
+    server = multiprocessing.Process(target=run_server, args=(net_mode,))
+    server.start()
+    run_client(net_mode)
+    server.terminate()
 
 
 if __name__ == '__main__':
