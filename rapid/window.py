@@ -50,6 +50,7 @@ class Window(pyglet.window.Window):
     def on_scene_change(self):
         if self.scene:
             self.set_caption(self.scene.name)
+            self.on_resize(self.width, self.height)
         if not self.scene:
             self.on_close()
 
