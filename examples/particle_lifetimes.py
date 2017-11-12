@@ -1,23 +1,25 @@
 import random
 import pyglet
-from rapid.particles import LineParticle, ParticleCollection
+from rapid.particles import PointParticle, LineParticle, ParticleCollection
 from skeleton import Game
+
+USE_POINTS = False
+# Free'd particles are turned red and transparent
+#   when USE_ALPHA is False, disabled particles appear red, unallocated appear blue
+#   when USE_ALPHA is True, disabled particles are invisible
+USE_ALPHA = False
+# when SHUFFLE is True, particles are free'd in random order for re-use
+SHUFFLE = True
+
 
 vx0, vy0 = 160, 100
 width, height = 7, 11
 padding = 5
 size = 50
-pool = ParticleCollection(LineParticle, 100)
+cls = PointParticle if USE_POINTS else LineParticle
+pool = ParticleCollection(cls, width * height)
 active = []
 i, j = 0, 0
-
-
-# Free'd particles are turned red and transparent
-#   when USE_ALPHA is False, disabled particles appear red
-#   when USE_ALPHA is True, disabled particles are invisible
-USE_ALPHA = True
-# when SHUFFLE is True, particles are free'd in random order for re-use
-SHUFFLE = True
 
 
 class MyGame(Game):
@@ -38,8 +40,11 @@ class MyGame(Game):
                 particle.free()
         new_particle = pool.alloc()
         assert new_particle, (i, j, len(active))
-        new_particle.p0 = self.camera.to_world_coords(x0, y0)
-        new_particle.p1 = self.camera.to_world_coords(x1, y1)
+        if USE_POINTS:
+            new_particle.pos = self.camera.to_world_coords(x0, y0)
+        else:
+            new_particle.p0 = self.camera.to_world_coords(x0, y0)
+            new_particle.p1 = self.camera.to_world_coords(x1, y1)
         new_particle.color = 255, 255, 255, 255
         active.append(new_particle)
         i = (i + 1) % (width * height)
@@ -56,6 +61,18 @@ game = MyGame()
 game.components.append(pool)
 fps = pyglet.clock.ClockDisplay(clock=game.window.clock)
 
+
+with pool.iterator() as it:
+    for particle in it:
+        particle.color = 0, 0, 255, 0
+        if not USE_POINTS:
+            particle.p0 = 0, 0
+            particle.p1 = (size - padding, ) * 2
+
 if USE_ALPHA:
     ParticleCollection.enable_blending()
+
+pyglet.gl.glPointSize(12.0)
+pyglet.gl.glEnable(pyglet.gl.GL_POINT_SMOOTH)
+
 game.run()
