@@ -1,8 +1,8 @@
-from rapid.particles import LineParticle, LineParticleCollection
+from rapid.particles import LineParticle, ParticleCollection
 from skeleton import Game
 
 
-pool = LineParticleCollection(1)
+pool = ParticleCollection(LineParticle, 1)
 particle = pool.alloc()  # type: LineParticle
 assert particle
 
