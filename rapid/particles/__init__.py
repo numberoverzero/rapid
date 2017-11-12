@@ -1,116 +1,170 @@
-import pyglet.gl
-from pyglet.graphics import Batch
+from pyglet import gl
+from pyglet.graphics import Batch, Group
 from pyglet.graphics.vertexdomain import VertexList
 
 
-from typing import Optional, Tuple, TypeVar
+from typing import ClassVar, Generic, Optional, Tuple, Type, TypeVar
 from ..scene import BatchDrawable
 
 __all__ = [
-    "LineParticleCollection"
+    "ParticleCollection", "AbstractParticle",
+    "Vec2", "Color",
+    "LineParticle"
 ]
 
+DEBUG = True
 Color = Tuple[int, int, int, int]  # c4B
 Vec2 = Tuple[float, float]  # v2f
-T = TypeVar("T")
 
 
-def monotonic_counter(initial: int=0):
+def _monotonic_counter(initial: int=0):
     value = initial
     while True:
         yield value
         value += 1
 
 
-GLOBAL_ID = monotonic_counter()
+_GLOBAL_ID = _monotonic_counter()
+
+
+ParticleType = TypeVar("ParticleType", bound="AbstractParticle")
 
 
 # noinspection PyProtectedMember
-class LineParticleCollection(BatchDrawable):
-    """Collection of particles, rendered using GL_LINES"""
+class ParticleCollection(BatchDrawable, Generic[ParticleType]):
+    max: int
+    active: int
     _verts: VertexList
-    active_particles: int
-    _next_inactive: Optional["LineParticle"]
+    _inactive: Optional["ParticleType"] = None
 
-    def __init__(self, max_particles: int=1000, batch: Optional[Batch]=None) -> None:
-        super().__init__(batch)
-        self._verts = self.batch.add(2 * max_particles, pyglet.gl.GL_LINES, None, "v2f/stream", "c4B/stream")
+    @staticmethod
+    def enable_blending() -> None:
+        # TODO this should be part of window setup, right?
+        gl.glEnable(gl.GL_BLEND)
+        gl.glBlendFunc(gl.GL_SRC_ALPHA, gl.GL_SRC_ALPHA)
+        gl.glEnable(gl.GL_LINE_SMOOTH)
 
-        self.active_particles = max_particles
-        self._next_inactive = None
-        for i in range(max_particles):
-            particle = LineParticle(_collection=self, _id=next(GLOBAL_ID), _i=i)
-            self.free(particle)
-        assert self.active_particles == 0
+    def __init__(
+            self, particle_cls: Type["ParticleType"],
+            particle_count: int=1000, batch: Optional[Batch]=None) -> None:
+        super().__init__(batch=batch)
+        self._verts = particle_cls.allocate_verts(particle_count, self.batch)
 
-    def alloc(self) -> Optional["LineParticle"]:
-        """Pull an inactive particle off the inactive stack, push it onto the active stack"""
-        particle = self._next_inactive
+        self.active = self.max = particle_count
+        for index in range(particle_count):
+            self.free(particle_cls.new_instance(_collection=self, _index=index))
+        assert self.active == 0
+
+    def alloc(self) -> Optional["ParticleType"]:
+        particle = self._inactive
         if particle is None:
             return None
-        self._next_inactive = particle._next_inactive
-        particle._id = next(GLOBAL_ID)
-        self.active_particles += 1
+        self._inactive = particle._next
+        if DEBUG:
+            particle._id = next(_GLOBAL_ID)
+        self.active += 1
         return particle
 
-    def free(self, particle: "LineParticle") -> None:
-        particle._id = None
-        particle._next_inactive = self._next_inactive
-        self._next_inactive = particle
-        self.active_particles -= 1
+    def free(self, particle: "ParticleType") -> None:
+        if DEBUG:
+            particle._id = None
+        particle._next = self._inactive
+        self._inactive = particle
+        self.active -= 1
 
 
 # noinspection PyProtectedMember
-class LineParticle:
-    _collection: LineParticleCollection
-    _i: int
-    _next_inactive: Optional["LineParticle"]
+class AbstractParticle:
+    vert_count: ClassVar[int]
+    gl_mode: ClassVar[int]  # pyglet.gl.GL_LINES, pyglet.gl.GL_POINTS, etc.
+
+    _collection: ParticleCollection
+    _index: int
+    _next: Optional["AbstractParticle"]
     _id: Optional[int]
 
-    def __init__(self, _collection: LineParticleCollection, _id: int, _i: int) -> None:
+    def __init__(self, _collection: ParticleCollection, _index: int) -> None:
         self._collection = _collection
-        self._i = _i
+        self._index = _index
+        self._id = None
 
-        self._next_inactive = None
-        self._id = _id
+    def __eq__(self, other: "AbstractParticle") -> bool:
+        try:
+            return self._id == other._id
+        except AttributeError:
+            return False
 
-        self.p0 = 0, 0
-        self.p1 = 0, 0
-        self.color = 255, 255, 255, 255
+    @classmethod
+    def new_instance(cls, _collection: ParticleCollection, _index: int) -> "AbstractParticle":
+        return cls(_collection=_collection, _index=_index)
 
-    def __repr__(self) -> str:
-        if self._id is not None:
-            x = f"{self._id}, {id(self)}"
-        else:
-            x = id(self)
-        return f"<LineParticle[{x}]>"
-
-    @property
-    def p0(self) -> Vec2:
-        return self._collection._verts.vertices[self._i * 4 + 0: self._i * 4 + 2]
-
-    @p0.setter
-    def p0(self, v: Vec2):
-        self._collection._verts.vertices[self._i * 4 + 0: self._i * 4 + 2] = v
-
-    @property
-    def p1(self) -> Vec2:
-        return self._collection._verts.vertices[self._i * 4 + 2: self._i * 4 + 4]
-
-    @p1.setter
-    def p1(self, v: Vec2):
-        self._collection._verts.vertices[self._i * 4 + 2: self._i * 4 + 4] = v
-
-    @property
-    def color(self) -> Color:
-        return self._collection._verts.colors[self._i * 8: self._i * 8 + 4]
-
-    @color.setter
-    def color(self, c: Color):
-        self._collection._verts.colors[self._i * 8: self._i * 8 + 8] = c * 2
+    @classmethod
+    def allocate_verts(cls, count: int, batch: Batch, group: Optional[Group]=None) -> VertexList:
+        return batch.add(count * cls.vert_count, cls.gl_mode, group, "v2f/stream", "c4B/stream")
 
     def free(self) -> None:
         self._collection.free(self)
 
-    def set_alpha(self, x: int) -> None:
-        self._collection._verts.colors[self._i * 8 + 3: self._i * 8 + 8 + 3: 4] = (x, x)
+    def _get_vert(self, i: int) -> Vec2:
+        start = 2 * (self._index * self.vert_count + i)
+        return self._collection._verts.vertices[start: start + 2]
+
+    def _set_vert(self, i: int, v: Vec2) -> None:
+        start = 2 * (self._index * self.vert_count + i)
+        self._collection._verts.vertices[start: start + 2] = v
+
+    def _get_color(self, i: int) -> Color:
+        start = 4 * (self._index * self.vert_count + i)
+        return self._collection._verts.colors[start: start + 4]
+
+    def _set_color(self, i: int, c: Color) -> None:
+        start = 4 * (self._index * self.vert_count + i)
+        self._collection._verts.colors[start: start + 4] = c
+
+    def _get_alpha(self) -> int:
+        start = 4 * (self._index * self.vert_count) + 3
+        return self._collection._verts.colors[start]
+
+    def _set_alpha(self, a: int) -> None:
+        start = 4 * (self._index * self.vert_count) + 3
+        end = start + 4 * self.vert_count
+        self._collection._verts.colors[start: end: 4] = (a,) * self.vert_count
+
+
+class LineParticle(AbstractParticle):
+    vert_count = 2
+    gl_mode = gl.GL_LINES
+
+    @classmethod
+    def new_instance(cls, _collection: ParticleCollection, _index: int) -> AbstractParticle:
+        instance = super().new_instance(_collection, _index)
+        instance.color = 255, 255, 255, 255
+        return instance
+
+    @property
+    def p0(self) -> Vec2:
+        return self._get_vert(0)
+
+    @p0.setter
+    def p0(self, v: Vec2) -> None:
+        self._set_vert(0, v)
+
+    @property
+    def p1(self) -> Vec2:
+        return self._get_vert(1)
+
+    @p1.setter
+    def p1(self, v: Vec2) -> None:
+        self._set_vert(1, v)
+
+    @property
+    def color(self) -> Color:
+        return self._get_color(0)
+
+    @color.setter
+    def color(self, c: Color) -> None:
+        self._set_color(0, c)
+        self._set_color(1, c)
+
+    def set_alpha(self, a: int) -> None:
+        self._set_alpha(a)
