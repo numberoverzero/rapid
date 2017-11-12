@@ -46,7 +46,7 @@ class ParticleCollection(BatchDrawable, Generic[ParticleType]):
 
     def __init__(
             self, particle_cls: Type["ParticleType"],
-            particle_count: int=1000, batch: Optional[Batch]=None) -> None:
+            particle_count: int=1000, *, batch: Optional[Batch]=None) -> None:
         super().__init__(batch=batch)
         self._verts = particle_cls.allocate_verts(particle_count, self.batch)
 
@@ -71,6 +71,48 @@ class ParticleCollection(BatchDrawable, Generic[ParticleType]):
         particle._next = self._inactive
         self._inactive = particle
         self.active -= 1
+
+    def iterator(self):
+        """Temporarily allocate all available particles for iteration.
+
+        .. code-block:: pycon
+
+            >>> collection = ParticleCollection(LineParticle)
+            >>> with collection.iterator() as it:
+            ...     for particle in it:
+            ...         particle.color = 255, 0, 0, 255
+        """
+        return CollectionIterator(self)
+
+
+class CollectionIterator(Generic[ParticleType]):
+    """Temporarily allocate all available particles for iteration.
+
+    .. code-block:: pycon
+
+        >>> collection = ParticleCollection(LineParticle)
+        >>> with collection.iterator() as it:
+        ...     for particle in it:
+        ...         particle.color = 255, 0, 0, 255
+    """
+    def __init__(self, collection: ParticleCollection) -> None:
+        self.collection = collection
+        self.allocated = []
+
+    def __enter__(self):
+        particle = self.collection.alloc()
+        while particle:
+            self.allocated.append(particle)
+            particle = self.collection.alloc()
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        for particle in self.allocated:
+            particle.free()
+        del self.allocated
+
+    def __iter__(self):
+        return iter(self.allocated)
 
 
 # noinspection PyProtectedMember
@@ -131,6 +173,36 @@ class AbstractParticle:
         self._collection._verts.colors[start: end: 4] = (a,) * self.vert_count
 
 
+class PointParticle(AbstractParticle):
+    vert_count = 1
+    gl_mode = gl.GL_POINTS
+
+    @classmethod
+    def new_instance(cls, _collection: ParticleCollection, _index: int) -> AbstractParticle:
+        instance = super().new_instance(_collection, _index)
+        instance.color = 255, 255, 255, 255
+        return instance
+
+    @property
+    def pos(self) -> Vec2:
+        return self._get_vert(0)
+
+    @pos.setter
+    def pos(self, v: Vec2) -> None:
+        self._set_vert(0, v)
+
+    @property
+    def color(self) -> Color:
+        return self._get_color(0)
+
+    @color.setter
+    def color(self, c: Color) -> None:
+        self._set_color(0, c)
+
+    def set_alpha(self, a: int) -> None:
+        self._set_alpha(a)
+
+
 class LineParticle(AbstractParticle):
     vert_count = 2
     gl_mode = gl.GL_LINES
@@ -165,6 +237,54 @@ class LineParticle(AbstractParticle):
     def color(self, c: Color) -> None:
         self._set_color(0, c)
         self._set_color(1, c)
+
+    def set_alpha(self, a: int) -> None:
+        self._set_alpha(a)
+
+
+class TriangleParticle(AbstractParticle):
+    vert_count = 3
+    gl_mode = gl.GL_TRIANGLES
+
+    @classmethod
+    def new_instance(cls, _collection: ParticleCollection, _index: int) -> AbstractParticle:
+        instance = super().new_instance(_collection, _index)
+        instance.color = 255, 255, 255, 255
+        return instance
+
+    @property
+    def p0(self) -> Vec2:
+        return self._get_vert(0)
+
+    @p0.setter
+    def p0(self, v: Vec2) -> None:
+        self._set_vert(0, v)
+
+    @property
+    def p1(self) -> Vec2:
+        return self._get_vert(1)
+
+    @p1.setter
+    def p1(self, v: Vec2) -> None:
+        self._set_vert(1, v)
+
+    @property
+    def p2(self) -> Vec2:
+        return self._get_vert(2)
+
+    @p2.setter
+    def p2(self, v: Vec2) -> None:
+        self._set_vert(2, v)
+
+    @property
+    def color(self) -> Color:
+        return self._get_color(0)
+
+    @color.setter
+    def color(self, c: Color) -> None:
+        self._set_color(0, c)
+        self._set_color(1, c)
+        self._set_color(2, c)
 
     def set_alpha(self, a: int) -> None:
         self._set_alpha(a)
