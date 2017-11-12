@@ -17,8 +17,8 @@ class Drawable:
 
 
 class BatchDrawable(Drawable):
-    def __init__(self, batch: pyglet.graphics.Batch) -> None:
-        self.batch = batch
+    def __init__(self, batch: Optional[pyglet.graphics.Batch]=None) -> None:
+        self.batch = batch or pyglet.graphics.Batch()
 
     def on_draw(self, scene: "Scene") -> None:
         with scene.camera:
@@ -134,11 +134,11 @@ class Camera:
         pyglet.gl.glMatrixMode(pyglet.gl.GL_MODELVIEW)
         pyglet.gl.glPopMatrix()
 
-    def to_world_coords(self, screen_x: int, screen_y: int) -> Tuple[int, int]:
+    def to_world_coords(self, screen_x: int, screen_y: int) -> Tuple[float, float]:
         left, _, bottom, _ = self.world_bounds
         x = left + (screen_x / self.zoom)
         y = bottom + (screen_y / self.zoom)
-        return int(x), int(y)
+        return x, y
 
     def on_update(self, dt: float) -> None:
         pass
