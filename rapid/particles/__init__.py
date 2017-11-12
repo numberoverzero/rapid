@@ -28,138 +28,51 @@ GLOBAL_ID = monotonic_counter()
 # noinspection PyProtectedMember
 class LineParticleCollection(BatchDrawable):
     """Collection of particles, rendered using GL_LINES"""
+    _verts: VertexList
     active_particles: int
-    max_particles: int
-
-    _inactive_head: Optional["LineParticle"]
-    _active_head: Optional["LineParticle"]
-
-    _last_rendered_count: int
-    verts: VertexList
-    dirty: bool  # set to True to re-stream vert/color data
+    _next_inactive: Optional["LineParticle"]
 
     def __init__(self, max_particles: int=1000, batch: Optional[Batch]=None) -> None:
         super().__init__(batch)
-        self.verts = self.batch.add(2 * max_particles, pyglet.gl.GL_LINES, None, "v2f/stream", "c4B/stream")
+        self._verts = self.batch.add(2 * max_particles, pyglet.gl.GL_LINES, None, "v2f/stream", "c4B/stream")
 
-        self.dirty = True
-
-        self._last_rendered_count = 0
-        self.active_particles = 0
-        self.max_particles = max_particles
-
-        self._active_head = None
-        self._inactive_head = None
-        for _ in range(max_particles):
-            # _prev_particle isn't set, because we only need to track prev when free-ing an active particle
-            particle = LineParticle(collection=self)
-            particle._next_particle = self._inactive_head
-            self._inactive_head = particle
+        self.active_particles = max_particles
+        self._next_inactive = None
+        for i in range(max_particles):
+            particle = LineParticle(_collection=self, _id=next(GLOBAL_ID), _i=i)
+            self.free(particle)
+        assert self.active_particles == 0
 
     def alloc(self) -> Optional["LineParticle"]:
         """Pull an inactive particle off the inactive stack, push it onto the active stack"""
-        particle = self._inactive_head
+        particle = self._next_inactive
         if particle is None:
             return None
-
-        self.dirty = True
-
-        # Pop the to-be-returned particle from the inactive stack
-        self._inactive_head = particle._next_particle
-
-        # Push the to-be-returned particle onto the active stack
-        particle._next_particle = old_head = self._active_head
-        if old_head is not None:
-            old_head._prev_particle = particle
-        self._active_head = particle
-        particle._prev_particle = None
-
-        self.active_particles += 1
-
+        self._next_inactive = particle._next_inactive
         particle._id = next(GLOBAL_ID)
+        self.active_particles += 1
         return particle
 
     def free(self, particle: "LineParticle") -> None:
-        # TODO | is this actually a problem?  Double free should simply re-order
-        # TODO | the inactive list, without actually losing a particle...
-        assert particle._id is not None, "tried to double free"
         particle._id = None
-        self.dirty = True
-
-        prev = particle._prev_particle
-        next = particle._next_particle
-
-        if particle is self._active_head:
-            self._active_head = next
-
-        # Pointers to this particle now point to each other: A <--> particle <--> B becomes A <--> B
-        if prev is not None:
-            prev._next_particle = next
-        if next is not None:
-            next._prev_particle = prev
-
-        # Clear this particle's pointers, and push in onto the head of the inactive stack.
-        # _prev is always None on the inactive stack since we only need a singly linked list to allocate
-        particle._prev_particle = None
-        particle._next_particle = self._inactive_head
-        self._inactive_head = particle
-
+        particle._next_inactive = self._next_inactive
+        self._next_inactive = particle
         self.active_particles -= 1
-
-    def on_update(self, dt: float) -> None:
-        if self.dirty:
-            self._rebuild_verts()
-            self.dirty = False
-
-    def _rebuild_verts(self) -> None:
-        n = self.active_particles
-        particle = self._active_head
-        for i in range(n):
-            self.verts.vertices[i * 4: i * 4 + 4] = [*particle.p0, *particle.p1]
-            self.verts.colors[i * 8: i * 8 + 8] = particle.color * 2
-            particle = next(particle)
-        assert particle is None, "excluded some active particles"
-
-        if self._last_rendered_count > n:
-            to_clear = self._last_rendered_count - n
-            # multiply by 8 because there are 4 values per vertex color, two vertices per particle
-            # offset by 3 to set the alpha to 0
-            # replace with to_clear * 2 because there are 2 vertices to clear per particle
-            self.verts.colors[n * 8 + 3: (n + to_clear) * 8 + 3: 4] = (0,) * (to_clear * 2)
-        self._last_rendered_count = n
 
 
 # noinspection PyProtectedMember
-class ParticleProperty:
-    # noinspection PyTypeChecker
-    def __get__(self, instance: Optional["LineParticle"], owner):
-        if instance is None:
-            return self
-        return instance.__dict__[self.name]
-
-    def __set__(self, instance: "LineParticle", value):
-        instance.__dict__[self.name] = value
-        instance._collection.dirty = True
-
-    def __set_name__(self, owner, name):
-        self.name = name
-
-
 class LineParticle:
     _collection: LineParticleCollection
-    _prev_particle: Optional["LineParticle"]
-    _next_particle: Optional["LineParticle"]
+    _i: int
+    _next_inactive: Optional["LineParticle"]
     _id: Optional[int]
 
-    p0: Vec2 = ParticleProperty()
-    p1: Vec2 = ParticleProperty()
-    color: Color = ParticleProperty()
+    def __init__(self, _collection: LineParticleCollection, _id: int, _i: int) -> None:
+        self._collection = _collection
+        self._i = _i
 
-    def __init__(self, collection: LineParticleCollection) -> None:
-        self._collection = collection
-        self._prev_particle = None
-        self._next_particle = None
-        self._id = None
+        self._next_inactive = None
+        self._id = _id
 
         self.p0 = 0, 0
         self.p1 = 0, 0
@@ -172,8 +85,32 @@ class LineParticle:
             x = id(self)
         return f"<LineParticle[{x}]>"
 
-    def __next__(self) -> Optional["LineParticle"]:
-        return self._next_particle
+    @property
+    def p0(self) -> Vec2:
+        return self._collection._verts.vertices[self._i * 4 + 0: self._i * 4 + 2]
+
+    @p0.setter
+    def p0(self, v: Vec2):
+        self._collection._verts.vertices[self._i * 4 + 0: self._i * 4 + 2] = v
+
+    @property
+    def p1(self) -> Vec2:
+        return self._collection._verts.vertices[self._i * 4 + 2: self._i * 4 + 4]
+
+    @p1.setter
+    def p1(self, v: Vec2):
+        self._collection._verts.vertices[self._i * 4 + 2: self._i * 4 + 4] = v
+
+    @property
+    def color(self) -> Color:
+        return self._collection._verts.colors[self._i * 8: self._i * 8 + 4]
+
+    @color.setter
+    def color(self, c: Color):
+        self._collection._verts.colors[self._i * 8: self._i * 8 + 8] = c * 2
 
     def free(self) -> None:
         self._collection.free(self)
+
+    def set_alpha(self, x: int) -> None:
+        self._collection._verts.colors[self._i * 8 + 3: self._i * 8 + 8 + 3: 4] = (x, x)
