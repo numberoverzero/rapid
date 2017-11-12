@@ -40,12 +40,11 @@ class LineParticleCollection(BatchDrawable):
 
     def __init__(self, max_particles: int=1000, batch: Optional[Batch]=None) -> None:
         super().__init__(batch)
-        self.verts = self.batch.add(2 * max_particles, pyglet.gl.GL_LINES, None, "v2f", "c4B")
-        # self.verts = self.batch.add(max_particles, pyglet.gl.GL_LINES, None, ('v2f', (0.0,) * 200), ('c4B', (255,) * 400))
+        self.verts = self.batch.add(2 * max_particles, pyglet.gl.GL_LINES, None, "v2f/stream", "c4B/stream")
 
         self.dirty = True
 
-        self._last_rendered_count = max_particles
+        self._last_rendered_count = 0
         self.active_particles = 0
         self.max_particles = max_particles
 
@@ -109,32 +108,25 @@ class LineParticleCollection(BatchDrawable):
 
     def on_update(self, dt: float) -> None:
         if self.dirty:
-            new_verts = [0] * 4 * self.active_particles  # Each particle has 2 (x, y) pairs
-            new_colors = [0] * 8 * self.active_particles  # Each particle has a (r, g, b, a) tuple
-
-            particle = self._active_head
-            for i in range(self.active_particles):
-                new_verts[i * 4: i * 4 + 4] = [*particle.p0, *particle.p1]
-                new_colors[i * 8: i * 8 + 8] = particle.color * 2
-                particle = next(particle)
-            assert particle is None, "excluded some active particles"
-
-            if self._last_rendered_count != self.active_particles:
-                self.verts.resize(2 * self.active_particles)
-                self._last_rendered_count = self.active_particles
-            try:
-                self.verts.vertices = new_verts
-            except ValueError:
-                print(f"new_verts: {len(new_verts)} vertices: {len(self.verts.vertices)} active: {self.active_particles}")
-                raise
-
-            try:
-                self.verts.colors = new_colors
-            except ValueError:
-                print(f"new_colors: {len(new_colors)} colors: {len(self.verts.colors)} active: {self.active_particles}")
-                raise
-
+            self._rebuild_verts()
             self.dirty = False
+
+    def _rebuild_verts(self) -> None:
+        n = self.active_particles
+        particle = self._active_head
+        for i in range(n):
+            self.verts.vertices[i * 4: i * 4 + 4] = [*particle.p0, *particle.p1]
+            self.verts.colors[i * 8: i * 8 + 8] = particle.color * 2
+            particle = next(particle)
+        assert particle is None, "excluded some active particles"
+
+        if self._last_rendered_count > n:
+            to_clear = self._last_rendered_count - n
+            # multiply by 8 because there are 4 values per vertex color, two vertices per particle
+            # offset by 3 to set the alpha to 0
+            # replace with to_clear * 2 because there are 2 vertices to clear per particle
+            self.verts.colors[n * 8 + 3: (n + to_clear) * 8 + 3: 4] = (0,) * (to_clear * 2)
+        self._last_rendered_count = n
 
 
 # noinspection PyProtectedMember
