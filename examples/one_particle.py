@@ -1,8 +1,10 @@
+from rapid.windowing.scene import BatchDrawable
 from rapid.particles import LineParticle, ParticleCollection
 from skeleton import Game
 
 
-pool = ParticleCollection(LineParticle, 1)
+pool_renderer = BatchDrawable()
+pool = ParticleCollection(LineParticle, 1, batch=pool_renderer.batch)
 particle = pool.alloc()  # type: LineParticle
 assert particle
 
@@ -17,5 +19,5 @@ class MyGame(Game):
 
 
 game = MyGame()
-game.components.append(pool)
+game.components.append(pool_renderer)
 game.run()

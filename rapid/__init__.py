@@ -1,13 +1,11 @@
-from .scene import Camera, Drawable, Scene
+from .windowing import Camera, Scene, Window
 from .util import Sentinel
-from .window import Window
 
 from pyglet.window import key
 
 __all__ = [
-    "Camera", "Drawable", "Scene",
+    "Camera", "Scene", "Window",
     "Sentinel",
-    "Window",
 
     # repackaged
     "key"

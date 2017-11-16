@@ -1,5 +1,6 @@
 import random
 import pyglet
+from rapid.windowing.scene import BatchDrawable
 from rapid.particles import PointParticle, LineParticle, ParticleCollection
 from skeleton import Game
 
@@ -17,7 +18,8 @@ width, height = 7, 11
 padding = 5
 size = 50
 cls = PointParticle if USE_POINTS else LineParticle
-pool = ParticleCollection(cls, width * height)
+pool_renderer = BatchDrawable()
+pool = ParticleCollection(cls, width * height, batch=pool_renderer.batch)
 active = []
 i, j = 0, 0
 
@@ -58,7 +60,7 @@ class MyGame(Game):
 
 
 game = MyGame()
-game.components.append(pool)
+game.components.append(pool_renderer)
 fps = pyglet.clock.ClockDisplay(clock=game.window.clock)
 
 

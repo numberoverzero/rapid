@@ -1,6 +1,6 @@
 import uvloop
 from typing import Any, Optional, Tuple, Type, Union
-from rapid.window import Scene
+from rapid import Scene
 from rapid.net import AddrInfo, handle, tcp, udp
 
 __all__ = [

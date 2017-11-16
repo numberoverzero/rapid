@@ -12,7 +12,7 @@ class Drawable:
         pass
 
     @classmethod
-    def of(cls, batch: pyglet.graphics.Batch) -> "Drawable":
+    def of(cls, batch: Optional[pyglet.graphics.Batch]=None) -> "BatchDrawable":
         return BatchDrawable(batch)
 
 

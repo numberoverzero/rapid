@@ -4,12 +4,11 @@ from pyglet.graphics.vertexdomain import VertexList
 
 
 from typing import ClassVar, Generic, Optional, Tuple, Type, TypeVar
-from ..scene import BatchDrawable
 
 __all__ = [
     "ParticleCollection", "AbstractParticle",
     "Vec2", "Color",
-    "LineParticle"
+    "LineParticle", "PointParticle", "TriangleParticle"
 ]
 
 DEBUG = True
@@ -31,7 +30,7 @@ ParticleType = TypeVar("ParticleType", bound="AbstractParticle")
 
 
 # noinspection PyProtectedMember
-class ParticleCollection(BatchDrawable, Generic[ParticleType]):
+class ParticleCollection(Generic[ParticleType]):
     max: int
     active: int
     _verts: VertexList
@@ -46,9 +45,8 @@ class ParticleCollection(BatchDrawable, Generic[ParticleType]):
 
     def __init__(
             self, particle_cls: Type["ParticleType"],
-            particle_count: int=1000, *, batch: Optional[Batch]=None) -> None:
-        super().__init__(batch=batch)
-        self._verts = particle_cls.allocate_verts(particle_count, self.batch)
+            particle_count: int=1000, *, batch: Batch) -> None:
+        self._verts = particle_cls.allocate_verts(particle_count, batch)
 
         self.active = self.max = particle_count
         for index in range(particle_count):
