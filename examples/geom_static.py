@@ -1,23 +1,63 @@
-from rapid.primitives.utils import GLMode
-from rapid.primitives.geometry import circle, flatten
+from rapid.primitives.utils import GLMode, Color, Vec2
+from rapid.primitives.shapes import Circle, Rectangle
 from rapid.windowing.scene import BatchDrawable
 from skeleton import Game
+from pyglet import gl
+
+GAME = Game()
+MODE = GLMode.Triangles
+SHAPE = "circle"
+MULTIPLE_RENDERERS = False
+
+if not MULTIPLE_RENDERERS:
+    renderer = BatchDrawable()
+    GAME.components.append(renderer)
+
+radius = 100
+rotation = 3.14159 / 1
+p = 1.6 * radius
+resolution = 40
+colors = [
+    Color(int(255 / 1), int(255 / 8), 0, 127),
+    Color(int(255 / 2), int(255 / 4), 0, 127),
+    Color(int(255 / 4), int(255 / 2), 0, 127),
+    Color(int(255 / 8), int(255 / 1), 0, 127),
+]
+centers = [
+    (p, p), (-p, p), (-p, -p), (p, -p)
+]
 
 
-renderer = BatchDrawable()
+for color, center in zip(colors, centers):
+    if MULTIPLE_RENDERERS:
+        renderer = BatchDrawable()
+        GAME.components.append(renderer)
+    if SHAPE == "circle":
+        circle_shape = Circle(
+            center=Vec2.of(center),
+            radius=radius,
+            resolution=resolution,
+            color=color,
+            batch=renderer.batch,
+            mode=MODE)
+    else:
+        rect_shape = Rectangle(
+            center=Vec2.of(center),
+            width=radius,
+            height=radius/2,
+            rotation=rotation,
+            color=color,
+            batch=renderer.batch,
+            mode=MODE
+        )
 
 
-c = (0, 0)
-r = 210
-n = 3
-verts = flatten(circle(c[0], c[1], r, n, GLMode.TriangleFan))
-assert len(verts) == 2 * (n + 1)
-renderer.batch.add(
-    n + 1, GLMode.TriangleFan.gl_mode, None,
-    ("v2f", verts),
-    ("c4B", (255, 255, 255, 255) * (n + 1)),
-)
+gl.glEnable(gl.GL_BLEND)
+gl.glBlendFunc(gl.GL_SRC_ALPHA, gl.GL_SRC_ALPHA)
+gl.glEnable(gl.GL_LINE_SMOOTH)
 
-game = Game()
-game.components.append(renderer)
-game.run()
+gl.glFrontFace(gl.GL_CCW)
+gl.glEnable(gl.GL_CULL_FACE)
+gl.glCullFace(gl.GL_BACK)
+
+GAME.run()
