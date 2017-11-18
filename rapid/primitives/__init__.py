@@ -1,1 +1,1 @@
-from .utils import Vec2
+from .utils import Color, GLMode, Vec2
