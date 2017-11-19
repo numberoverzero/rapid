@@ -7,14 +7,19 @@ from .. import Vec2
 
 __all__ = [
     "EvalContext", "safe_eval",
-    "Parser", "Template",
-    "json_template_loader"
+    "Parser", "Template", "whitelist_common_attribute_names",
+    "json_template_loader", "load_json_templates",
 ]
 
 DEFAULT_TYPE_NAMES = {
     "float": float,
     "vec2": Vec2
 }
+
+
+def whitelist_common_attribute_names(parser: Parser) -> None:
+    """Utility to whitelist 'x', 'y', 'z', 'r', 'g', 'b', 'a'"""
+    parser.eval_context.whitelisted_attribute_names |= {"x", "y", "z", "r", "g", "b", "a"}
 
 
 def json_template_loader(
@@ -93,3 +98,54 @@ def json_template_loader(
         return template
 
     return load_template
+
+
+def load_json_templates(data: Dict[str, Any]) -> Dict[str, Template]:
+    """Returns a collection of templates from a loaded json blob.
+
+    An example of a collection of templates:
+
+        {
+          "box[center, width, height]": {
+            "variables": {
+              "center": "vec2",
+              "width": "float",
+              "height": "float"
+            },
+            "template": {
+              "physics": {
+                "body": {
+                  "type": "static",
+                  "elasticity": 1,
+                  "friction": 0
+                },
+                "shapes": [...]
+              }
+            }
+          },
+          "medium_box[center]": {
+            "__base__": "box[center, width, height]",
+            "defaults": {
+              "width": 200,
+              "height": 400
+            }
+          }
+        }
+
+    :param data: Loaded json blob
+    :return: dict of templates from the blob
+    """
+    templates = {}
+    bases = []
+    for name, blob in data.items():
+        base = blob.get("__base__", None)
+        bases.append((name, base))
+
+    load = json_template_loader(base_templates=templates)
+    while bases:
+        name, base = bases.pop(0)
+        if base is not None and base not in templates:
+            bases.append((name, base))
+            continue
+        load(name, data[name])
+    return templates

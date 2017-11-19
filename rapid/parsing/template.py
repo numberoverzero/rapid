@@ -31,6 +31,10 @@ class Parser:
         value = self.eval_context.evaluate(str(value))
         return self.handlers[type](value)
 
+    @staticmethod
+    def with_variables(variables: Dict[str, Any]) -> "Parser":
+        return Parser(eval_context=EvalContext(exposed_variables=variables))
+
 
 def add_default_handlers(parser: Parser):
     for type in [float, int, str, list]:
@@ -106,7 +110,7 @@ class Template:
             self, *,
             variables: Dict[str, Any],
             bootstrap_parser: Optional[Parser]=None) -> Parser:
-        """Create a new rapid.parsing.EvalContext with the template's variables bound.
+        """Create a new rapid.parsing.Parser with the template's variables bound.
 
         Because the template's variables may need to be parsed, another parser is necessary to bootstrap
         the process.  If you do not provide one, a default rapid.parsing.Parser is used with no exposed variables.
@@ -119,7 +123,7 @@ class Template:
         :param bootstrap_parser:
             An optional rapid.parsing.Parser used to evaluate the template variables.
         :return:
-            A new rapid.parsing.EvalContext with the Template's variables exposed.
+            A new rapid.parsing.Parser with the Template's variables exposed.
         """
         raw_parser_variables = {
             **self.variable_defaults,
@@ -143,10 +147,9 @@ class Template:
             raise ValueError(f"bootstrap_parser can't parse required types {missing_handlers}")
 
         # run each of the parser variables through the bootstrap parser
-        exposed_variables = {
-            name: bootstrap_parser.parse(value, self.variable_types[name])
-            for name, value in raw_parser_variables.items()
-        }
+        exposed_variables = {}
+        for name, value in raw_parser_variables.items():
+            exposed_variables[name] = bootstrap_parser.parse(value, self.variable_types[name])
 
         return Parser(eval_context=EvalContext(exposed_variables=exposed_variables))
 
