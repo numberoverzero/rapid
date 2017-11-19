@@ -7,7 +7,8 @@ _symbols = {}
 
 __all__ = [
     "Vec2", "Sentinel",
-    "get_annotations", "has_annotations"
+    "get_annotations", "has_annotations",
+    "missing"
 ]
 
 
@@ -146,3 +147,5 @@ def get_annotations(obj) -> dict:
     if not has_annotations(obj):
         setattr(obj, ANNOTATIONS_NAME, {})
     return getattr(obj, ANNOTATIONS_NAME)
+
+missing = Sentinel("Missing")
