@@ -76,9 +76,9 @@ def body_factory(
 
     .. code-block:: pycon
 
-        >>> from rapid.physics import body_factory
-        >>> from rapid.parsing import Parser, EvalContext
         >>> import pymunk
+        >>> from rapid.physics import body_factory
+        >>> from rapid.parsing import EvalContext, Parser
         >>> parser = Parser(eval_context=EvalContext(
         ...     exposed_variables={
         ...         "x": 7,
@@ -173,9 +173,9 @@ def shape_factory(
 
     .. code-block:: pycon
 
-        >>> from rapid.physics import shape_factory
-        >>> from rapid.parsing import Parser, EvalContext
         >>> import pymunk
+        >>> from rapid.physics import shape_factory
+        >>> from rapid.parsing import EvalContext, Parser
         >>> parser = Parser(eval_context=EvalContext(
         ...     exposed_variables={
         ...         "x": 7,
