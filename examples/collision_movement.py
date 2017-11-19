@@ -2,7 +2,8 @@ import pymunk
 from pymunk import Space, Body, Circle, Segment
 from pyglet import gl
 from rapid.windowing.scene import BatchDrawable
-from rapid.primitives import shapes, Color, Vec2, GLMode
+from rapid.primitives import shapes, Color, GLMode
+
 from skeleton import Game, key
 
 FIXED_TIMESTEP = 1 / 120
