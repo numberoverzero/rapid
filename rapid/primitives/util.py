@@ -1,4 +1,3 @@
-from math import cos, sin
 from pyglet.gl import (
     GL_POINTS,
     GL_LINES,
@@ -11,8 +10,8 @@ from pyglet.gl import (
     GL_QUAD_STRIP,
     GL_POLYGON,
 )
-from numbers import Real
-from typing import Generator, Iterable, NamedTuple, Tuple, Union, overload
+from typing import Generator, Iterable, NamedTuple, Tuple, overload
+from ..util import Vec2
 import enum
 
 
@@ -34,55 +33,6 @@ class GLMode(enum.Enum):
 
     def __repr__(self) -> str:
         return f"<{self.__class__.__name__}[{self.gl_name}]>"
-
-
-class Vec2(NamedTuple):
-    x: Real = 0
-    y: Real = 0
-
-    def __repr__(self) -> str:
-        return f"<{self.__class__.__name__}{list(self)}>"
-
-    def copy(self) -> "Vec2":
-        return Vec2(*self)
-
-    @staticmethod
-    def of(vec2: Tuple[Real, Real]) -> "Vec2":
-        return Vec2(*vec2)
-
-    def __add__(self, other: Union["Vec2", Real]) -> "Vec2":
-        if isinstance(other, Real):
-            return Vec2(self.x + other, self.y + other)
-        else:
-            return Vec2(self.x + other.x, self.y + other.y)
-
-    def __sub__(self, other: Union["Vec2", Real]) -> "Vec2":
-        if isinstance(other, Real):
-            return Vec2(self.x - other, self.y - other)
-        else:
-            return Vec2(self.x - other.x, self.y - other.y)
-
-    def __mul__(self, other: Union["Vec2", Real]) -> "Vec2":
-        if isinstance(other, Real):
-            return Vec2(self.x * other, self.y * other)
-        else:
-            return Vec2(self.x * other.x, self.y * other.y)
-
-    def __div__(self, other: Union["Vec2", Real]) -> "Vec2":
-        if isinstance(other, Real):
-            return Vec2(self.x / other, self.y / other)
-        else:
-            return Vec2(self.x / other.x, self.y / other.y)
-
-    def rotate_about(self, theta: Real) -> "Vec2":
-        c, s = cos(theta), sin(theta)
-        return Vec2(
-            self.x * c - self.y * s,
-            self.x * s + self.y * c
-        )
-
-
-Vec2.Zero = Vec2(0, 0)
 
 
 class Color(NamedTuple):

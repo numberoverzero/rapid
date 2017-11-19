@@ -4,7 +4,8 @@ No rendering, simply calculates 2D verts for various geometry given a GLMode
 from typing import Generator
 from math import cos, sin, pi
 
-from .utils import GLMode, Vec2
+from .util import GLMode
+from ..util import Vec2
 
 
 def rectangle(

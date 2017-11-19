@@ -1,1 +1,3 @@
-from .utils import Color, GLMode, Vec2
+from .util import Color, GLMode
+
+__all__ = ["Color", "GLMode"]

@@ -2,7 +2,8 @@ import inspect
 import pyglet
 from typing import ClassVar, Dict, Generic, Optional, TypeVar
 from .geometry import circle, rectangle
-from .utils import Color, GLMode, Vec2, flatten
+from .util import Color, GLMode, flatten
+from ..util import Vec2
 
 T = TypeVar("T")
 
