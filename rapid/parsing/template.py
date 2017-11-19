@@ -1,4 +1,4 @@
-from typing import TypeVar, Any, Type, Dict, Union, Tuple, Optional
+from typing import TypeVar, Any, Type, Dict, Optional
 
 from ..util import Vec2
 from ._eval import EvalContext
@@ -55,7 +55,8 @@ class Template:
         >>> template = Template(
         ...     name="rectangle",
         ...     local_variable_types=variable_types,
-        ...     local_defaults=defaults
+        ...     local_defaults=defaults,
+        ...     local_template_data={}
         ... )
         >>> parser = template.build_parser(
         ...     variables={
@@ -69,16 +70,19 @@ class Template:
 
     """
     name: str
-    variable_types: Dict[str, Type]
+    variable_types: Dict[str, Type[T]]
     variable_defaults: Dict[str, Any]
+    template_data: Dict[str, Any]
 
     def __init__(
             self, *, name: str,
-            local_variable_types: Dict[str, Union[Type, Tuple[T]]],
-            local_defaults: Dict[str, Any]) -> None:
+            local_variable_types: Dict[str, Type[T]],
+            local_defaults: Dict[str, Any],
+            local_template_data: Dict[str, Any]) -> None:
         self.name = name
         self._local_types = self.variable_types = local_variable_types
         self._local_defaults = self.variable_defaults = local_defaults
+        self._local_data = self.template_data = local_template_data
 
     def derive_from(self, base: "Template") -> None:
         self.variable_types = {
@@ -88,6 +92,10 @@ class Template:
         self.variable_defaults = {
             **base.variable_defaults,
             **self._local_defaults
+        }
+        self.template_data = {
+            **base.template_data,
+            **self._local_data
         }
 
     def build_parser(
