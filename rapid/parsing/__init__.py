@@ -82,9 +82,9 @@ def json_template_loader(
 
         template = Template(
             name=name,
-            local_variable_types={key: type_names[value] for (key, value) in variables.items()},
+            local_variables={key: type_names[value] for (key, value) in variables.items()},
             local_defaults=defaults,
-            local_template_data=template_data
+            local_data=template_data
         )
         if base_template:
             template.derive_from(base_template)

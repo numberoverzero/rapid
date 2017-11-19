@@ -50,13 +50,13 @@ class Template:
 
         >>> from rapid.parsing import Template
         >>> from rapid import Vec2
-        >>> variable_types = {"center": Vec2, "width": float, "height": float}
+        >>> variables = {"center": Vec2, "width": float, "height": float}
         >>> defaults = {"width": "125/6"}
         >>> template = Template(
         ...     name="rectangle",
-        ...     local_variable_types=variable_types,
+        ...     local_variables=variables,
         ...     local_defaults=defaults,
-        ...     local_template_data={}
+        ...     local_data={}
         ... )
         >>> parser = template.build_parser(
         ...     variables={
@@ -76,18 +76,22 @@ class Template:
 
     def __init__(
             self, *, name: str,
-            local_variable_types: Dict[str, Type[T]],
+            local_variables: Dict[str, Type[T]],
             local_defaults: Dict[str, Any],
-            local_template_data: Dict[str, Any]) -> None:
+            local_data: Dict[str, Any]) -> None:
         self.name = name
-        self._local_types = self.variable_types = local_variable_types
-        self._local_defaults = self.variable_defaults = local_defaults
-        self._local_data = self.template_data = local_template_data
+        self._local_variables = local_variables
+        self._local_defaults = local_defaults
+        self._local_data = local_data
+
+        self.variable_types = dict(local_variables)
+        self.variable_defaults = dict(local_defaults)
+        self.template_data = dict(local_data)
 
     def derive_from(self, base: "Template") -> None:
         self.variable_types = {
             **base.variable_types,
-            **self._local_types
+            **self._local_variables
         }
         self.variable_defaults = {
             **base.variable_defaults,
