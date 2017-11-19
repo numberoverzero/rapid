@@ -44,6 +44,7 @@ def guard_body_type(body_type: int) -> None:
 
 def build_body(
         body_type: int,
+        position: Optional[Vec2]=None,
         mass: Optional[float]=None,
         moment: Optional[float]=None) -> pymunk.Body:
     """Create a new pymunk.Body
@@ -52,6 +53,8 @@ def build_body(
 
     :param body_type:
         One of pymunk.Body.DYNAMIC, pymunk.Body.KINEMATIC, pymunk.Body.STATIC
+    :param position:
+        Vec2 for initial position.  Defaults to pymunk's default position.
     :param mass:
         Body mass.  Defaults to pymunk's default body mass.
     :param moment:
@@ -61,6 +64,8 @@ def build_body(
     """
     guard_body_type(body_type)
     body = pymunk.Body(body_type=body_type)
+    if position is not None:
+        body.position = position
     if mass is not None:
         body.mass = mass
     if moment is not None:
@@ -70,6 +75,7 @@ def build_body(
 
 def body_factory(
         body_type: int,
+        position: Optional[Any]=None,
         mass: Optional[Any]=None,
         moment: Optional[Any]=None) -> Callable[[Parser], pymunk.Body]:
     """Returns a function that can be called to create a new pymunk.Body using attribute templates
@@ -78,24 +84,30 @@ def body_factory(
 
         >>> import pymunk
         >>> from rapid.physics import body_factory
-        >>> from rapid.parsing import EvalContext, Parser
+        >>> from rapid.parsing import EvalContext, Parser, whitelist_common_attribute_names
         >>> parser = Parser(eval_context=EvalContext(
         ...     exposed_variables={
         ...         "x": 7,
         ...         "y": 11
         ...     }
         ... ))
+        >>> whitelist_common_attribute_names(parser)
         >>> static_factory = body_factory(
         ...     pymunk.Body.STATIC,
+        ...     position=[20, 70],
         ...     mass="x**2", moment="y**2"
         ... )
         >>> body = static_factory(parser, None)
-        >>> body.mass, body.moment
-        (49.0, 121.0)
+        >>> body.mass, body.moment, body.position
+        (49.0, 121.0, (20, 70))
 
 
     :param body_type:
         One of pymunk.Body.DYNAMIC, pymunk.Body.KINEMATIC, pymunk.Body.STATIC
+    :param position:
+        An optional mass value or template to apply to the body.
+        If you provide a tuple, list, or Vec2, it will be used directly.
+        If you provide a string, it will be eval'd with the given rapid.parsing.Parser
     :param mass:
         An optional mass value or template to apply to the body.
         If you provide a float, it will be used directly.
@@ -122,6 +134,7 @@ def body_factory(
         """
         return build_body(
             body_type,
+            position=parser.parse(position, Vec2),
             mass=parser.parse(mass, float),
             moment=parser.parse(moment, float)
         )
