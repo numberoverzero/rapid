@@ -89,8 +89,8 @@ class EvalContext:
             self, *,
             exposed_variables: Optional[Dict[str, Any]]=None,
             whitelisted_attribute_names: Optional[Set[str]]=None) -> None:
-        self.variables = exposed_variables or {}
-        self.attr_whitelist = whitelisted_attribute_names or set()
+        self.exposed_variables = exposed_variables or {}
+        self.whitelisted_attribute_names = whitelisted_attribute_names or set()
 
     def __enter__(self):
         return self.evaluate
@@ -126,12 +126,12 @@ class EvalContext:
         elif isinstance(node, ast.Name):  # "center"
             obj_name = node.id
             try:
-                return self.variables[obj_name]
+                return self.exposed_variables[obj_name]
             except KeyError:
                 raise RuntimeError(f"Tried to access unknown variable {obj_name}")
         elif isinstance(node, ast.Attribute):  # "center.x"
             attr_name = node.attr
-            if attr_name not in self.attr_whitelist:
+            if attr_name not in self.whitelisted_attribute_names:
                 raise RuntimeError(f"Tried to access non-whitelisted attr {attr_name!r}")
             # can't just use node.value.id since this may not be an ast.Name,
             # but a chained value eg. "root.first.second"
