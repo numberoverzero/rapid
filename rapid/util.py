@@ -23,6 +23,8 @@ class Vec2(NamedTuple):
 
     @staticmethod
     def of(vec2: Tuple[Real, Real]) -> "Vec2":
+        vec2 = tuple(vec2)
+        assert len(vec2) == 2
         return Vec2(*vec2)
 
     def __add__(self, other: Union["Vec2", Real]) -> "Vec2":
