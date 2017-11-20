@@ -52,7 +52,7 @@ def load_world(*, data: Dict[str, Any], global_variables: Optional[Dict[str, Any
     objects = data.get("objects", {})
 
     def build(name: str, data: Dict[str, Any]) -> Tuple[pymunk.Body, List[pymunk.Shape]]:
-        logger.debug(f"building {name!r}")
+        logger.info(f"building {name!r}")
         if "__base__" in data:
             # Rendering from a base template
             object_template = new_template(f"anonymous:{name}", data)
