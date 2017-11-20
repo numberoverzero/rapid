@@ -1,11 +1,15 @@
 import json
 
+import pymunk.pyglet_util
 from pyglet import gl
 
-from rapid.physics import load_world
+from rapid.physics import fixed_timestep_clock, load_space
 from rapid.rendering import Color, GLMode
 from rapid.util import Vec2
 from skeleton import Game, key
+
+
+options = pymunk.pyglet_util.DrawOptions()
 
 
 FIXED_TIMESTEP = 1 / 120
@@ -98,9 +102,10 @@ GEOMETRY = json.loads("""{
     }
   }
 }""")
+space = pymunk.Space()
+advance_time = fixed_timestep_clock(1 / 120)
+bodies = load_space(space, data=GEOMETRY, global_variables=GLOBAL_GEOMETRY_VARIABLES)
 
-world = load_world(data=GEOMETRY, global_variables=GLOBAL_GEOMETRY_VARIABLES)
-world.timestep = FIXED_TIMESTEP
 
 movement = {
     key.W: 0,
@@ -131,13 +136,13 @@ class MyGame(Game):
         # Update player velocity
         vx = PLAYER_VELOCITY * (movement[key.D] - movement[key.A])
         vy = PLAYER_VELOCITY * (movement[key.W] - movement[key.S])
-        world.bodies["player"].velocity = vx, vy
-        world.step(dt)
+        bodies["player"].velocity = vx, vy
+        advance_time(space, dt)
 
     def on_draw(self):
         super().on_draw()
         with self.camera:
-            world.debug_draw()
+            space.debug_draw(options)
 
 
 game = MyGame()

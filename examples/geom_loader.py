@@ -1,10 +1,14 @@
 import json
 import logging
 
-from rapid.physics import load_world
+import pymunk.pyglet_util
+
+from rapid.physics import load_space
 from rapid.windowing import BatchDrawable
 from skeleton import Game
 
+
+options = pymunk.pyglet_util.DrawOptions()
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -117,13 +121,14 @@ GEOMETRY = """{
     }
   }
 }"""
-world = load_world(data=json.loads(GEOMETRY))
+space = pymunk.Space()
+load_space(space, data=json.loads(GEOMETRY))
 game = Game()
 
 
 def debug_draw(scene) -> None:
     with scene.camera:
-        world.debug_draw()
+        space.debug_draw(options)
 
 
 renderer = BatchDrawable()
