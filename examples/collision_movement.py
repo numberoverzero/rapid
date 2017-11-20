@@ -2,10 +2,11 @@ import json
 
 from pyglet import gl
 
-from rapid.util import Vec2
 from rapid.physics import load_world
 from rapid.rendering import Color, GLMode
+from rapid.util import Vec2
 from skeleton import Game, key
+
 
 FIXED_TIMESTEP = 1 / 120
 WALL_COLOR = Color(128, 128, 128, 128)

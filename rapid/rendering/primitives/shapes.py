@@ -3,9 +3,10 @@ from typing import ClassVar, Dict, Generic, Optional, TypeVar
 
 import pyglet
 
-from ..util import Color, GLMode, flatten
 from ...util import Vec2
+from ..util import Color, GLMode, flatten
 from .geometry import circle, rectangle
+
 
 T = TypeVar("T")
 

@@ -1,5 +1,6 @@
 from typing import Optional
-from rapid.windowing import Scene, Camera, Window
+
+from rapid.windowing import Camera, Scene, Window
 from skeleton.net import Client
 
 

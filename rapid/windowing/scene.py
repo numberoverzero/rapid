@@ -1,5 +1,7 @@
 from typing import Callable, List, Optional, Tuple
+
 import pyglet
+
 
 Viewport = Tuple[int, int]
 

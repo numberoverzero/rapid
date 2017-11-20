@@ -1,6 +1,13 @@
-from ._shared import AddrInfo, MessageHandler, MessageProtocol, build_slices, get_routing_annotations_for
-from typing import Any, Callable, Dict, Optional, Tuple, Type
 import asyncio
+from typing import Any, Callable, Dict, Optional, Tuple, Type
+
+from ._shared import (
+    AddrInfo,
+    MessageHandler,
+    MessageProtocol,
+    build_slices,
+    get_routing_annotations_for,
+)
 
 
 class MessageSerializer:

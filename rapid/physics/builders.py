@@ -1,9 +1,20 @@
-from typing import Any, Callable, Dict, Generic, Optional, Set, Tuple, Type, TypeVar
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    Generic,
+    Optional,
+    Set,
+    Tuple,
+    Type,
+    TypeVar,
+)
 
 import pymunk
 
 from ..parsing import Parser
 from ..util import Vec2, missing
+
 
 __all__ = [
     "body_factory", "shape_factory",

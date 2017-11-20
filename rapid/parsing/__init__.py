@@ -1,9 +1,9 @@
 from typing import Any, Callable, Dict, Optional, Type
 
+from ..util import Vec2
 from ._eval import EvalContext, safe_eval
 from .template import Parser, Template
 
-from ..util import Vec2
 
 __all__ = [
     "EvalContext", "safe_eval",

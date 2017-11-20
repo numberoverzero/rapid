@@ -3,8 +3,9 @@ High-level components for quick prototyping on top of rapid.
 Single-scene games
 """
 from rapid import key
-from skeleton.game import Game
 from skeleton import net
+from skeleton.game import Game
+
 
 __all__ = [
     "Game",

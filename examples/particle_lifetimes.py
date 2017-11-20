@@ -2,9 +2,10 @@ import random
 
 import pyglet
 
-from rapid.rendering import PointParticle, LineParticle, ParticleCollection
+from rapid.rendering import LineParticle, ParticleCollection, PointParticle
 from rapid.windowing import BatchDrawable
 from skeleton import Game
+
 
 USE_POINTS = False
 # Free'd particles are turned red and transparent

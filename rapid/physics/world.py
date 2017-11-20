@@ -1,19 +1,23 @@
+import logging
 from typing import Any, Dict, List, Optional, Tuple
+
 import pymunk
 import pymunk.pyglet_util
 
-from .builders import (
-    body_factory, shape_factory,
-    body_types_by_name, shape_classes_by_name,
-    extract_shape_definition
-)
 from ..parsing import (
-    load_json_templates,
     json_template_loader,
+    load_json_templates,
     whitelist_common_attribute_names,
 )
+from .builders import (
+    body_factory,
+    body_types_by_name,
+    extract_shape_definition,
+    shape_classes_by_name,
+    shape_factory,
+)
 
-import logging
+
 logger = logging.getLogger(__name__)
 
 

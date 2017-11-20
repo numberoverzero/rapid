@@ -1,4 +1,5 @@
-from .shapes import Shape, Circle, Rectangle
+from .shapes import Circle, Rectangle, Shape
+
 
 __all__ = [
     "Shape",

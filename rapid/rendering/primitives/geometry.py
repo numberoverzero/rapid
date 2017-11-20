@@ -1,11 +1,12 @@
 """
 No rendering, simply calculates 2D verts for various geometry given a GLMode
 """
-from math import cos, sin, pi
+from math import cos, pi, sin
 from typing import Generator
 
-from ..util import GLMode
 from ...util import Vec2
+from ..util import GLMode
+
 
 __all__ = [
     "rectangle", "circle", "ellipse"

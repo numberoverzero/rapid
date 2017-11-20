@@ -1,13 +1,12 @@
 from .particles import (
     AbstractParticle,
-    ParticleCollection,
     LineParticle,
+    ParticleCollection,
     PointParticle,
-    TriangleParticle
+    TriangleParticle,
 )
-
-from .primitives import Shape, Circle, Rectangle
-from .util import GLMode, Color
+from .primitives import Circle, Rectangle, Shape
+from .util import Color, GLMode
 
 
 __all__ = [

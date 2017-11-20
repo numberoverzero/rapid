@@ -1,7 +1,9 @@
 import asyncio
-import uvloop
-import pyglet
 from typing import List, Optional
+
+import pyglet
+import uvloop
+
 from .scene import Scene
 
 

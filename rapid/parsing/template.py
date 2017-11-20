@@ -1,7 +1,8 @@
-from typing import TypeVar, Any, Type, Dict, Optional
+from typing import Any, Dict, Optional, Type, TypeVar
 
 from ..util import Vec2
 from ._eval import EvalContext
+
 
 T = TypeVar("T")
 

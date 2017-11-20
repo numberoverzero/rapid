@@ -1,9 +1,11 @@
-from skeleton import Game
-from rapid.windowing import BatchDrawable
-from rapid.physics import load_world
-
 import json
 import logging
+
+from rapid.physics import load_world
+from rapid.windowing import BatchDrawable
+from skeleton import Game
+
+
 logging.basicConfig(level=logging.DEBUG)
 
 GEOMETRY = """{

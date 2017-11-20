@@ -1,12 +1,12 @@
+from typing import ClassVar, Generic, Optional, Type, TypeVar
+
 from pyglet import gl
 from pyglet.graphics import Batch, Group
 from pyglet.graphics.vertexdomain import VertexList
 
-
-from .util import Color, GLMode
 from ..util import Vec2
+from .util import Color, GLMode
 
-from typing import ClassVar, Generic, Optional, Type, TypeVar
 
 # When True, particles are assigned a unique id every time they are allocated
 DEBUG = True

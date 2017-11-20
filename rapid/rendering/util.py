@@ -1,18 +1,20 @@
+import enum
+from typing import Generator, Iterable, NamedTuple, Tuple, overload
+
 from pyglet.gl import (
-    GL_POINTS,
     GL_LINES,
     GL_LINE_LOOP,
     GL_LINE_STRIP,
-    GL_TRIANGLES,
-    GL_TRIANGLE_STRIP,
-    GL_TRIANGLE_FAN,
+    GL_POINTS,
+    GL_POLYGON,
     GL_QUADS,
     GL_QUAD_STRIP,
-    GL_POLYGON,
+    GL_TRIANGLES,
+    GL_TRIANGLE_FAN,
+    GL_TRIANGLE_STRIP,
 )
-from typing import Generator, Iterable, NamedTuple, Tuple, overload
+
 from ..util import Vec2
-import enum
 
 
 class GLMode(enum.Enum):

@@ -2,6 +2,7 @@ from math import cos, sin
 from numbers import Real
 from typing import NamedTuple, Tuple, Union
 
+
 ANNOTATIONS_NAME = "_rapid_annotations"
 _symbols = {}
 

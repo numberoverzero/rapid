@@ -1,7 +1,10 @@
 import asyncio
 import inspect
-from typing import Any, Dict, Optional, Generic, Tuple, Type, TypeVar, Union
+from typing import Any, Dict, Generic, Optional, Tuple, Type, TypeVar, Union
+
 from ..util import get_annotations, has_annotations
+
+
 _Transport_co = TypeVar("Transport_co", bound=Union[asyncio.Transport, asyncio.DatagramTransport])
 ROUTING_ANNOTATIONS = "rapid.networking.routing"
 

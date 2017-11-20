@@ -37,9 +37,10 @@ use ``safe_eval``:
 As always, be very careful using eval (in any form) on unconstrained user
 input.  This module has not been rigorously tested or reviewed.
 """
-from typing import Any, Dict, Optional, Set
 import ast
 import operator
+from typing import Any, Dict, Optional, Set
+
 
 __all__ = ["EvalContext", "PythonEvalContext", "safe_eval"]
 

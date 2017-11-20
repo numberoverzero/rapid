@@ -1,9 +1,10 @@
 from pyglet import gl
 
-from rapid.rendering import Circle, Rectangle, GLMode, Color
+from rapid.rendering import Circle, Color, GLMode, Rectangle
 from rapid.util import Vec2
 from rapid.windowing import BatchDrawable
 from skeleton import Game
+
 
 GAME = Game()
 MODE = GLMode.Triangles

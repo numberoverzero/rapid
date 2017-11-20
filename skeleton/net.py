@@ -1,7 +1,10 @@
-import uvloop
 from typing import Any, Optional, Tuple, Type, Union
-from rapid.windowing import Scene
+
+import uvloop
+
 from rapid.net import AddrInfo, handle, tcp, udp
+from rapid.windowing import Scene
+
 
 __all__ = [
     "AbstractMessage", "Client",
