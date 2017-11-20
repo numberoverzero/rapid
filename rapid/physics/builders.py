@@ -1,4 +1,4 @@
-from typing import Any, Callable, Dict, Generic, Optional, TypeVar
+from typing import Any, Callable, Dict, Generic, Optional, Set, Tuple, Type, TypeVar
 
 import pymunk
 
@@ -8,10 +8,24 @@ from ..util import Vec2, missing
 __all__ = [
     "body_factory", "shape_factory",
     "build_body", "build_shape",
+    "extract_shape_definition",
+    "body_types_by_name",
+    "shape_classes_by_name"
 ]
 
 ShapeClass = TypeVar("ShapeClass", pymunk.Circle, pymunk.Segment, pymunk.Poly)
 
+body_types_by_name = {
+    "dynamic": pymunk.Body.DYNAMIC,
+    "kinematic": pymunk.Body.KINEMATIC,
+    "static": pymunk.Body.STATIC,
+}  # type: Dict[str, int]
+
+shape_classes_by_name = {
+    "circle": pymunk.Circle,
+    "segment": pymunk.Segment,
+    "poly": pymunk.Poly
+}  # type: Dict[str, Type[ShapeClass]]
 
 shape_arguments = {
     pymunk.Circle: {
@@ -34,7 +48,25 @@ shape_arguments = {
             "vertices": (list, Vec2)
         }, "optional": {},
     }
-}
+}  # type: Dict[Type[ShapeClass], Dict[str, Any]]
+
+
+def arguments_for_shape(shape_cls: Type[ShapeClass]) -> Tuple[Set[str], Set[str]]:
+    return (
+        set(shape_arguments[shape_cls]["required"].keys()),
+        set(shape_arguments[shape_cls]["optional"].keys()),
+    )
+
+
+def extract_shape_definition(shape_cls: Type[ShapeClass], data: Dict[str, Any]) -> Dict[str, Any]:
+    shape_definition = {}
+    required, optional = arguments_for_shape(shape_cls)
+    for required_arg in required:
+        shape_definition[required_arg] = data[required_arg]
+    for optional_arg in optional:
+        if optional_arg in data:
+            shape_definition[optional_arg] = data[optional_arg]
+    return shape_definition
 
 
 def guard_body_type(body_type: int) -> None:

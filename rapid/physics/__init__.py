@@ -1,14 +1,5 @@
-from .builders import body_factory, shape_factory
-from .world import World
-from .loader import WorldLoader
+from .world import World, load_world
 
 __all__ = [
-    "World", "WorldLoader",
-    "load_world",
-    "body_factory", "shape_factory",
+    "World" "load_world",
 ]
-
-
-def load_world(string: str, **global_variables) -> World:
-    return WorldLoader().load(string, global_variables)
-
