@@ -3,12 +3,12 @@ from typing import Any, Callable, Dict, Optional, Type
 from ._eval import EvalContext, safe_eval
 from .template import Parser, Template
 
-from .. import Vec2
+from ..util import Vec2
 
 __all__ = [
     "EvalContext", "safe_eval",
-    "Parser", "Template", "whitelist_common_attribute_names",
-    "json_template_loader", "load_json_templates",
+    "Parser", "Template",
+    "whitelist_common_attribute_names", "json_template_loader", "load_json_templates",
 ]
 
 DEFAULT_TYPE_NAMES = {

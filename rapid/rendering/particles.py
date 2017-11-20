@@ -3,17 +3,13 @@ from pyglet.graphics import Batch, Group
 from pyglet.graphics.vertexdomain import VertexList
 
 
-from typing import ClassVar, Generic, Optional, Tuple, Type, TypeVar
+from .util import Color, GLMode
+from ..util import Vec2
 
-__all__ = [
-    "ParticleCollection", "AbstractParticle",
-    "Vec2", "Color",
-    "LineParticle", "PointParticle", "TriangleParticle"
-]
+from typing import ClassVar, Generic, Optional, Type, TypeVar
 
+# When True, particles are assigned a unique id every time they are allocated
 DEBUG = True
-Color = Tuple[int, int, int, int]  # c4B
-Vec2 = Tuple[float, float]  # v2f
 
 
 def _monotonic_counter(initial: int=0):
@@ -116,7 +112,7 @@ class CollectionIterator(Generic[ParticleType]):
 # noinspection PyProtectedMember
 class AbstractParticle:
     vert_count: ClassVar[int]
-    gl_mode: ClassVar[int]  # pyglet.gl.GL_LINES, pyglet.gl.GL_POINTS, etc.
+    gl_mode: ClassVar[GLMode]
 
     _collection: ParticleCollection
     _index: int
@@ -140,7 +136,7 @@ class AbstractParticle:
 
     @classmethod
     def allocate_verts(cls, count: int, batch: Batch, group: Optional[Group]=None) -> VertexList:
-        return batch.add(count * cls.vert_count, cls.gl_mode, group, "v2f/stream", "c4B/stream")
+        return batch.add(count * cls.vert_count, cls.gl_mode.gl_mode, group, "v2f/stream", "c4B/stream")
 
     def free(self) -> None:
         self._collection.free(self)
@@ -173,7 +169,7 @@ class AbstractParticle:
 
 class PointParticle(AbstractParticle):
     vert_count = 1
-    gl_mode = gl.GL_POINTS
+    gl_mode = GLMode.Points
 
     @classmethod
     def new_instance(cls, _collection: ParticleCollection, _index: int) -> AbstractParticle:
@@ -203,7 +199,7 @@ class PointParticle(AbstractParticle):
 
 class LineParticle(AbstractParticle):
     vert_count = 2
-    gl_mode = gl.GL_LINES
+    gl_mode = GLMode.Lines
 
     @classmethod
     def new_instance(cls, _collection: ParticleCollection, _index: int) -> AbstractParticle:
@@ -242,7 +238,7 @@ class LineParticle(AbstractParticle):
 
 class TriangleParticle(AbstractParticle):
     vert_count = 3
-    gl_mode = gl.GL_TRIANGLES
+    gl_mode = GLMode.Triangles
 
     @classmethod
     def new_instance(cls, _collection: ParticleCollection, _index: int) -> AbstractParticle:

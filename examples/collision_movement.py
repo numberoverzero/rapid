@@ -1,8 +1,10 @@
 import json
+
 from pyglet import gl
+
+from rapid.util import Vec2
 from rapid.physics import load_world
-from rapid.primitives import Color, GLMode
-from rapid import Vec2
+from rapid.rendering import Color, GLMode
 from skeleton import Game, key
 
 FIXED_TIMESTEP = 1 / 120
@@ -97,7 +99,7 @@ GEOMETRY = json.loads("""{
 }""")
 
 world = load_world(data=GEOMETRY, global_variables=GLOBAL_GEOMETRY_VARIABLES)
-world.timestep = 1 / 120
+world.timestep = FIXED_TIMESTEP
 
 movement = {
     key.W: 0,

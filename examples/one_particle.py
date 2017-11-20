@@ -1,7 +1,6 @@
-from rapid.windowing.scene import BatchDrawable
-from rapid.particles import LineParticle, ParticleCollection
+from rapid.rendering import LineParticle, ParticleCollection
+from rapid.windowing import BatchDrawable
 from skeleton import Game
-
 
 pool_renderer = BatchDrawable()
 pool = ParticleCollection(LineParticle, 1, batch=pool_renderer.batch)

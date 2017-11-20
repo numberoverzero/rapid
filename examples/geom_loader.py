@@ -1,5 +1,5 @@
 from skeleton import Game
-from rapid.windowing.scene import BatchDrawable
+from rapid.windowing import BatchDrawable
 from rapid.physics import load_world
 
 import json

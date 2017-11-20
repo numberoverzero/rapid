@@ -1,7 +1,9 @@
 import random
+
 import pyglet
-from rapid.windowing.scene import BatchDrawable
-from rapid.particles import PointParticle, LineParticle, ParticleCollection
+
+from rapid.rendering import PointParticle, LineParticle, ParticleCollection
+from rapid.windowing import BatchDrawable
 from skeleton import Game
 
 USE_POINTS = False

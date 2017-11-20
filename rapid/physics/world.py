@@ -7,7 +7,11 @@ from .builders import (
     body_types_by_name, shape_classes_by_name,
     extract_shape_definition
 )
-from ..parsing import load_json_templates, json_template_loader, whitelist_common_attribute_names
+from ..parsing import (
+    load_json_templates,
+    json_template_loader,
+    whitelist_common_attribute_names,
+)
 
 import logging
 logger = logging.getLogger(__name__)
