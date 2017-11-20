@@ -1,4 +1,4 @@
-from rapid.primitives.utils import GLMode, Color, Vec2
+from rapid.primitives.util import GLMode, Color, Vec2
 from rapid.primitives.shapes import Circle, Rectangle
 from rapid.windowing.scene import BatchDrawable
 from skeleton import Game
