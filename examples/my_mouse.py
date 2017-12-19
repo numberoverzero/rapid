@@ -58,7 +58,11 @@ class MyParticle:
 
         self._particle.p0 = x, y  # front of triangle
 
-        m = -(x - lx) / (y - ly)  # negative reciprocal
+        try:
+            m = -(x - lx) / (y - ly)  # negative reciprocal
+        except ZeroDivisionError:
+            # hack to not think about zero division
+            return
         b = ly - m * lx
         d2 = (x - lx) ** 2 + (y - ly) ** 2
         xo = (d2 / (m**2 + 1)) ** 0.5
