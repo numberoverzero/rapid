@@ -1,11 +1,12 @@
-from typing import ClassVar, Generic, Optional, Type, TypeVar
+from typing import ClassVar, Generic, Optional, Tuple, Type, TypeVar
 
 from pyglet import gl
 from pyglet.graphics import Batch, Group
 from pyglet.graphics.vertexdomain import VertexList
 
 from ..util import Vec2
-from .util import Color, GLMode
+from .primitives.geometry import circle, rectangle
+from .util import Color, GLMode, flatten
 
 
 # When True, particles are assigned a unique id every time they are allocated
@@ -29,6 +30,7 @@ ParticleType = TypeVar("ParticleType", bound="AbstractParticle")
 class ParticleCollection(Generic[ParticleType]):
     max: int
     active: int
+    delete_on_last_free: bool
     _verts: VertexList
     _inactive: Optional["ParticleType"] = None
 
@@ -41,8 +43,10 @@ class ParticleCollection(Generic[ParticleType]):
 
     def __init__(
             self, particle_cls: Type["ParticleType"],
-            particle_count: int=1000, *, batch: Batch) -> None:
+            particle_count: int=1000,
+            delete_on_last_free: bool=False, *, batch: Batch) -> None:
         self._verts = particle_cls.allocate_verts(particle_count, batch)
+        self.delete_on_last_free = delete_on_last_free
 
         self.active = self.max = particle_count
         for index in range(particle_count):
@@ -65,6 +69,15 @@ class ParticleCollection(Generic[ParticleType]):
         particle._next = self._inactive
         self._inactive = particle
         self.active -= 1
+        if self.delete_on_last_free and not self.active:
+            del self
+
+    def __del__(self):
+        if self._verts:
+            self._verts.delete()
+            self._verts = None
+        if DEBUG:
+            print("Cleaned up ParticleCollection")
 
     def iterator(self):
         """Temporarily allocate all available particles for iteration.
@@ -124,6 +137,8 @@ class AbstractParticle:
         self._index = _index
         self._id = None
 
+    __hash__ = object.__hash__
+
     def __eq__(self, other: "AbstractParticle") -> bool:
         try:
             return self._id == other._id
@@ -149,6 +164,11 @@ class AbstractParticle:
         start = 2 * (self._index * self.vert_count + i)
         self._collection._verts.vertices[start: start + 2] = v
 
+    def _set_verts(self, verts: Tuple[float, ...]) -> None:
+        assert len(verts) == 2 * self.vert_count
+        start = 2 * (self._index * self.vert_count)
+        self._collection._verts.vertices[start: start + 2 * self.vert_count] = verts
+
     def _get_color(self, i: int) -> Color:
         start = 4 * (self._index * self.vert_count + i)
         return self._collection._verts.colors[start: start + 4]
@@ -156,6 +176,10 @@ class AbstractParticle:
     def _set_color(self, i: int, c: Color) -> None:
         start = 4 * (self._index * self.vert_count + i)
         self._collection._verts.colors[start: start + 4] = c
+
+    def _set_colors(self, c: Color) -> None:
+        start = 4 * (self._index * self.vert_count)
+        self._collection._verts.colors[start: start + 4 * self.vert_count] = c * self.vert_count
 
     def _get_alpha(self) -> int:
         start = 4 * (self._index * self.vert_count) + 3
@@ -191,7 +215,7 @@ class PointParticle(AbstractParticle):
 
     @color.setter
     def color(self, c: Color) -> None:
-        self._set_color(0, c)
+        self._set_colors(c)
 
     def set_alpha(self, a: int) -> None:
         self._set_alpha(a)
@@ -229,8 +253,7 @@ class LineParticle(AbstractParticle):
 
     @color.setter
     def color(self, c: Color) -> None:
-        self._set_color(0, c)
-        self._set_color(1, c)
+        self._set_colors(c)
 
     def set_alpha(self, a: int) -> None:
         self._set_alpha(a)
@@ -276,9 +299,156 @@ class TriangleParticle(AbstractParticle):
 
     @color.setter
     def color(self, c: Color) -> None:
-        self._set_color(0, c)
-        self._set_color(1, c)
-        self._set_color(2, c)
+        self._set_colors(c)
 
     def set_alpha(self, a: int) -> None:
         self._set_alpha(a)
+
+
+# noinspection PyAttributeOutsideInit
+class CircleParticle(AbstractParticle):
+    # You should subclass CircleParticle to modify the resolution
+    # Make sure this is the vert count, and not the number of triangles.
+    # For example, 20 slices requires 60 verts
+    vert_count = 20 * 3
+    gl_mode = GLMode.Triangles
+
+    _radius: float
+    _center: Vec2
+
+    def __init__(self, _collection: ParticleCollection, _index: int) -> None:
+        super().__init__(_collection, _index)
+        self._radius = 0
+        self._center = Vec2.Zero
+
+    @property
+    def center(self) -> Vec2:
+        return self._center
+
+    @center.setter
+    def center(self, c: Vec2) -> None:
+        self._center = c
+        self._recalculate_verts()
+
+    @property
+    def radius(self) -> float:
+        return self._radius
+
+    @radius.setter
+    def radius(self, r: float) -> None:
+        self._radius = r
+        self._recalculate_verts()
+
+    @classmethod
+    def new_instance(cls, _collection: ParticleCollection, _index: int) -> AbstractParticle:
+        instance = super().new_instance(_collection, _index)
+        instance.color = 255, 255, 255, 255
+        instance.radius = 0
+        return instance
+
+    def _recalculate_verts(self) -> None:
+        self._set_verts(tuple(flatten(circle(
+            center=self.center,
+            r=self.radius,
+            resolution=int(self.vert_count // 3),
+            mode=self.gl_mode))))
+
+    @property
+    def color(self) -> Color:
+        return self._get_color(0)
+
+    @color.setter
+    def color(self, c: Color) -> None:
+        self._set_colors(c)
+
+    def set_alpha(self, a: int) -> None:
+        self._set_alpha(a)
+
+
+class RectangleParticle(AbstractParticle):
+    vert_count = 4
+    gl_mode = GLMode.Quads
+
+    _center: Vec2
+    _width: float
+    _height: float
+    _rotation: float
+
+    def __init__(self, _collection: ParticleCollection, _index: int) -> None:
+        super().__init__(_collection, _index)
+        self._center = Vec2.Zero
+        self._width = self._height = self._rotation = 0
+
+    @property
+    def center(self) -> Vec2:
+        return self._center
+
+    @center.setter
+    def center(self, c: Vec2) -> None:
+        self._center = c
+        self._recalculate_verts()
+
+    @property
+    def rotation(self) -> float:
+        return self._rotation
+
+    @rotation.setter
+    def rotation(self, r: float) -> None:
+        self._rotation = r
+        self._recalculate_verts()
+
+    @property
+    def width(self) -> float:
+        return self._width
+
+    @width.setter
+    def width(self, w: float) -> None:
+        self._width = w
+        self._recalculate_verts()
+
+    @property
+    def height(self) -> float:
+        return self._height
+
+    @height.setter
+    def height(self, h: float) -> None:
+        self._height = h
+        self._recalculate_verts()
+
+    @classmethod
+    def new_instance(cls, _collection: ParticleCollection, _index: int) -> AbstractParticle:
+        instance = super().new_instance(_collection, _index)
+        instance.color = 255, 255, 255, 255
+        instance.width = instance.height = instance.rotation = 0
+        return instance
+
+    def _recalculate_verts(self) -> None:
+        self._set_verts(tuple(flatten(rectangle(
+            center=self.center,
+            width=self.width,
+            height=self.height,
+            rotation=self.rotation,
+            mode=self.gl_mode))))
+
+    @property
+    def color(self) -> Color:
+        return self._get_color(0)
+
+    @color.setter
+    def color(self, c: Color) -> None:
+        self._set_colors(c)
+
+    def set_alpha(self, a: int) -> None:
+        self._set_alpha(a)
+
+
+def single_particle(particle_cls: Type[ParticleType], *, batch: Batch) -> ParticleType:
+    """Allocate a single particle from an anonymous pool"""
+    pool = ParticleCollection(
+        particle_cls=particle_cls,
+        particle_count=1,
+        delete_on_last_free=True,
+        batch=batch)
+    particle = pool.alloc()
+    assert particle is not None
+    return particle

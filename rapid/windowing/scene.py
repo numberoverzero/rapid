@@ -2,6 +2,8 @@ from typing import Callable, List, Optional, Tuple
 
 import pyglet
 
+from ..util import Vec2
+
 
 Viewport = Tuple[int, int]
 
@@ -136,11 +138,11 @@ class Camera:
         pyglet.gl.glMatrixMode(pyglet.gl.GL_MODELVIEW)
         pyglet.gl.glPopMatrix()
 
-    def to_world_coords(self, screen_x: int, screen_y: int) -> Tuple[float, float]:
+    def to_world_coords(self, screen_x: int, screen_y: int) -> Vec2:
         left, _, bottom, _ = self.world_bounds
         x = left + (screen_x / self.zoom)
         y = bottom + (screen_y / self.zoom)
-        return x, y
+        return Vec2(x, y)
 
     def on_update(self, dt: float) -> None:
         pass

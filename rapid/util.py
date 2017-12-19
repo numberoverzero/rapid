@@ -29,29 +29,50 @@ class Vec2(NamedTuple):
         assert len(vec2) == 2
         return Vec2(*vec2)
 
-    def __add__(self, other: Union["Vec2", Real]) -> "Vec2":
+    def __add__(self, other: Union["Vec2", Tuple[Real, Real], Real]) -> "Vec2":
         if isinstance(other, Real):
             return Vec2(self.x + other, self.y + other)
         else:
-            return Vec2(self.x + other.x, self.y + other.y)
+            return Vec2(self.x + other[0], self.y + other[1])
 
-    def __sub__(self, other: Union["Vec2", Real]) -> "Vec2":
+    def __sub__(self, other: Union["Vec2", Tuple[Real, Real], Real]) -> "Vec2":
         if isinstance(other, Real):
             return Vec2(self.x - other, self.y - other)
         else:
-            return Vec2(self.x - other.x, self.y - other.y)
+            return Vec2(self.x - other[0], self.y - other[1])
 
-    def __mul__(self, other: Union["Vec2", Real]) -> "Vec2":
+    def __mul__(self, other: Union["Vec2", Tuple[Real, Real], Real]) -> "Vec2":
         if isinstance(other, Real):
             return Vec2(self.x * other, self.y * other)
         else:
-            return Vec2(self.x * other.x, self.y * other.y)
+            return Vec2(self.x * other[0], self.y * other[1])
 
-    def __div__(self, other: Union["Vec2", Real]) -> "Vec2":
+    def __floordiv__(self, other: Union["Vec2", Tuple[Real, Real], Real]) -> "Vec2":
+        if isinstance(other, Real):
+            return Vec2(self.x // other, self.y // other)
+        else:
+            return Vec2(self.x // other[0], self.y // other[1])
+
+    def __truediv__(self, other: Union["Vec2", Tuple[Real, Real], Real]) -> "Vec2":
         if isinstance(other, Real):
             return Vec2(self.x / other, self.y / other)
         else:
-            return Vec2(self.x / other.x, self.y / other.y)
+            return Vec2(self.x / other[0], self.y / other[1])
+
+    @property
+    def mag(self) -> float:
+        return (self.x ** 2 + self.y ** 2) ** 0.5
+
+    @property
+    def mag2(self) -> float:
+        return self.x ** 2 + self.y ** 2
+
+    @property
+    def normal(self) -> "Vec2":
+        m = self.mag
+        if m == 0:
+            return Vec2.Zero
+        return Vec2(self.x / m, self.y / m)
 
     def rotate_about(self, theta: Real) -> "Vec2":
         c, s = cos(theta), sin(theta)
